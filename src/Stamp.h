@@ -264,7 +264,8 @@ struct Stamp {
     }
   */
   // ============ EXPORT ============
-  virtual void _sync(bool force) = 0;
+  virtual void _sync(bool force) {
+  }
 
   // получить секунды
   uint32_t toSeconds() {
@@ -302,7 +303,7 @@ struct Stamp {
   // =========== OVERLOAD ===========
   // получить время в секундах
   uint32_t getUnix() {
-    _sync();
+    _sync(0);
     return unix;
   }
 
