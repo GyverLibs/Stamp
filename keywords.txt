@@ -9,11 +9,36 @@
 Stamp	KEYWORD1
 StampTicker	KEYWORD1
 Datime	KEYWORD1
+STAMP_ALG	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
+getStampZone	KEYWORD2
+setStampZone	KEYWORD2
 
+set	KEYWORD2
+toSeconds	KEYWORD2
+dateToChar	KEYWORD2
+dateToString	KEYWORD2
+timeToChar	KEYWORD2
+timeToString	KEYWORD2
+toChar	KEYWORD2
+toString	KEYWORD2
+parseDate	KEYWORD2
+parseTime	KEYWORD2
+parse	KEYWORD2
+parseHTTP	KEYWORD2
+
+get	KEYWORD2
+toMinutes	KEYWORD2
+toHours	KEYWORD2
+toDays	KEYWORD2
+getUnix	KEYWORD2
+
+update	KEYWORD2
+synced	KEYWORD2
+ms	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
