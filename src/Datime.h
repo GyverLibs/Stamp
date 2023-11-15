@@ -1,13 +1,31 @@
 #pragma once
 #include <Arduino.h>
 
-struct Datime {
+#include "StampUtils.h"
+#include "stamp_zone.h"
+
+#define UNIX_ALG_0 0       // ~402us и ~94B Flash (AVR)
+#define UNIX_ALG_1 1       // ~298us и ~138B Flash (AVR)
+#define UNIX_ALG_2 2       // ~216us и ~584B Flash (AVR)
+#define UNIX_ALG_3 3       // ~297us и ~178B Flash (AVR)
+#define UNIX_ALG_TIME_T 4  // ~246us и ~842B Flash (AVR)
+
+#ifndef UNIX_ALG
+#define _UNIX_ALG UNIX_ALG_3
+#endif
+
+#if _UNIX_ALG == UNIX_ALG_TIME_T
+#include <time.h>
+#endif
+
+class Datime {
+   public:
     // год
     uint16_t year = 2000;
     /*union {
         uint16_t year = 2000;
         uint16_t y;
-    };*/
+      };*/
 
     // месяц (1.. 12)
     uint8_t month = 1;
@@ -15,7 +33,7 @@ struct Datime {
         uint8_t month = 1;
         uint8_t mon;
         uint8_t mo;
-    };*/
+      };*/
 
     // день месяца (1.. 28-31)
     uint8_t day = 1;
@@ -23,14 +41,14 @@ struct Datime {
         uint8_t day = 1;
         uint8_t mday;
         uint8_t d;
-    };*/
+      };*/
 
     // час (0.. 23)
     uint8_t hour = 0;
     /*union {
         uint8_t hour = 0;
         uint8_t h;
-    };*/
+      };*/
 
     // минута (0.. 59)
     uint8_t minute = 0;
@@ -38,7 +56,7 @@ struct Datime {
         uint8_t minute = 0;
         uint8_t min;
         uint8_t m;
-    };*/
+      };*/
 
     // секунда (0.. 59)
     uint8_t second = 0;
@@ -46,7 +64,7 @@ struct Datime {
         uint8_t second = 0;
         uint8_t sec;
         uint8_t s;
-    };*/
+      };*/
 
     // день недели (1 пн.. 7 вс)
     uint8_t weekDay = 0;
@@ -54,7 +72,7 @@ struct Datime {
         uint8_t weekDay = 0;
         uint8_t wday;
         uint8_t wd;
-    };*/
+      };*/
 
     // день года (1.. 365-366)
     uint16_t yearDay = 0;
@@ -62,34 +80,37 @@ struct Datime {
         uint16_t yearDay = 0;
         uint16_t yday;
         uint16_t yd;
-    };*/
+      };*/
 
     // ========= CONSTRUCTOR =========
     Datime() {}
+    Datime(const Datime& dat) = default;
     Datime(const char* str) {
         parse(str);
     }
-    Datime(uint16_t nyear, uint8_t nmonth, uint8_t nday, uint8_t nhour, uint8_t nminute, uint8_t nsecond) {
-        set(nyear, nmonth, nday, nhour, nminute, nsecond);
+    Datime(uint32_t unix) {
+        set(unix);
     }
-    Datime(int yh, int mm, int ds) {
+    Datime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second) {
+        set(year, month, day, hour, minute, second);
+    }
+    Datime(uint16_t yh, uint16_t mm, uint16_t ds) {
         set(yh, mm, ds);
     }
-    Datime(const Datime& dat) = default;
 
     // ============= SET =============
     // установить время (год, месяц, день, час, минута, секунда)
-    void set(uint16_t nyear, uint8_t nmonth, uint8_t nday, uint8_t nhour, uint8_t nminute, uint8_t nsecond) {
-        year = nyear;
-        month = nmonth;
-        day = nday;
-        hour = nhour;
-        minute = nminute;
-        second = nsecond;
+    void set(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second) {
+        this->year = year;
+        this->month = month;
+        this->day = day;
+        this->hour = hour;
+        this->minute = minute;
+        this->second = second;
     }
 
     // установить время (год, месяц, день) или (час, минута, секунда). Автоматически при час > 60
-    void set(int yh, int mm, int ds) {
+    void set(uint16_t yh, uint16_t mm, uint16_t ds) {
         if (yh > 60) {
             year = yh;
             month = mm;
@@ -101,14 +122,212 @@ struct Datime {
         }
     }
 
+    // установить из unix времени и глобального часового пояса setStampZone
+    void set(uint32_t unix) {
+        int16_t zone = getStampZone();
+        if (zone >= -12 && zone <= 14) zone *= 60;  // to minutes
+        uint32_t u = unix + zone * 60ul;
+
+#if _UNIX_ALG == UNIX_ALG_0
+        this->second = u % 60ul;
+        u /= 60ul;
+        this->minute = u % 60ul;
+        u /= 60ul;
+        this->hour = u % 24ul;
+        u /= 24ul;
+        this->weekDay = (u + 3) % 7 + 1;
+        uint32_t z = u + 719468;
+        uint8_t era = z / 146097ul;
+        uint16_t doe = z - era * 146097ul;
+        uint16_t yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+        uint16_t y = yoe + era * 400;
+        uint16_t doy = doe - (yoe * 365 + yoe / 4 - yoe / 100);
+        uint16_t mp = (doy * 5 + 2) / 153;
+        this->day = doy - (mp * 153 + 2) / 5 + 1;
+        this->month = mp + (mp < 10 ? 3 : -9);
+        y += (this->month <= 2);
+        this->year = y;
+        this->yearDay = StampUtils::dateToYearDay(this->day, this->month, this->year);
+
+#elif _UNIX_ALG == UNIX_ALG_1
+        int32_t days, rem;
+        int years400, years100, years4, remainingyears;
+
+        days = u / 86400ul - 11017;
+        rem = u % 86400ul;
+        if (rem < 0) {
+            rem += 86400ul;
+            days--;
+        }
+
+        this->hour = rem / 3600ul;
+        rem %= 3600ul;
+        this->minute = rem / 60ul;
+        this->second = rem % 60ul;
+
+        if ((this->weekDay = ((3 + days) % 7)) < 0) this->weekDay += 7;
+        if (!this->weekDay) this->weekDay = 7;
+
+        years400 = days / 146097L;
+        days -= years400 * 146097L;
+        if (days < 0) {
+            days += 146097L;
+            years400--;
+        }
+
+        years100 = days / 36524L;
+        if (years100 == 4) years100--;
+        days -= years100 * 36524L;
+        years4 = days / 1461L;
+        days -= years4 * 1461L;
+        remainingyears = days / 365L;
+        if (remainingyears == 4) remainingyears--;
+        days -= remainingyears * 365L;
+        this->year = 2000 + years400 * 400 + years100 * 100 + years4 * 4 + remainingyears;
+        bool yearleap = remainingyears == 0 && (years4 != 0 || years100 == 0);
+
+        this->yearDay = days + 31 + 28 + yearleap;
+        if (this->yearDay >= 365u + yearleap) {
+            this->yearDay -= 365u + yearleap;
+            this->year++;
+        }
+        this->yearDay++;
+
+        this->month = 2;
+        while (1) {
+            uint8_t dm = StampUtils::daysInMonth(this->month + 1);  // from 0. Feb 28 here
+            if (this->month == 1) dm++;                             // 1 Feb
+            if (days < dm) break;
+            days -= dm;
+            if (++this->month >= 12) this->month = 0;
+        }
+        this->month++;
+        this->day = days + 1;
+
+#elif _UNIX_ALG == UNIX_ALG_2
+        int32_t fract;
+        uint16_t days, n, leapyear, years;
+        ldiv_t lresult;
+        div_t result;
+        if (u < 946684800) u = 946684800;
+
+        u -= 946684800;              // to 2000-01-01 UTC
+        days = u / 86400UL;          // 38753+
+        fract = u - days * 86400UL;  // 86400
+
+        lresult = ldiv(fract, 60L);  // 86400
+        this->second = lresult.rem;
+        result = div((int)lresult.quot, 60);  // 1440
+        this->minute = result.rem;
+        this->hour = result.quot;
+
+        n = days + 6;
+        n %= 7;
+        this->weekDay = n;
+        if (!this->weekDay) this->weekDay = 7;
+
+        lresult = ldiv((long)days, 36525L);  // 38753+
+        years = 100 * lresult.quot;
+        lresult = ldiv(lresult.rem, 1461L);  // 36525
+        years += 4 * lresult.quot;
+        days = lresult.rem;  // <- 1461
+        if (years > 100) days++;
+
+        leapyear = 1;
+        if (years == 100) leapyear = 0;
+        n = 364 + leapyear;
+
+        if (days > n) {
+            days -= leapyear;
+            leapyear = 0;
+            result = div(days, 365);  // 1461
+            years += result.quot;
+            days = result.rem;  // <- 365
+        }
+        this->year = 100 + years + 1900;
+        this->yearDay = days + 1;
+
+        n = 59 + leapyear;
+        if (days < n) {
+            result = div(days, 31);  // 1461
+            this->month = result.quot;
+            this->day = result.rem;
+        } else {
+            days -= n;
+            result = div(days, 153);  // 1461
+            this->month = 2 + result.quot * 5;
+            result = div(result.rem, 61);  // 153
+            this->month += result.quot * 2;
+            result = div(result.rem, 31);  // 61
+            this->month += result.quot;
+            this->day = result.rem;
+        }
+
+        this->day++;
+        this->month++;
+
+#elif _UNIX_ALG == UNIX_ALG_3
+        u -= 946684800;
+        this->second = u % 60ul;
+        u /= 60ul;
+        this->minute = u % 60ul;
+        u /= 60ul;
+        this->hour = u % 24ul;
+
+        uint16_t days = u / 24ul;
+        this->weekDay = (days + 5) % 7 + 1;
+
+        bool leap;
+        for (this->year = 0;; this->year++) {
+            leap = !(this->year & 3);
+            if (days < 365u + leap) break;
+            days -= 365u + leap;
+        }
+        this->year += 2000;
+        this->yearDay = days + 1;
+
+        for (this->month = 1; this->month < 12; this->month++) {
+            uint8_t dm = StampUtils::daysInMonth(this->month);
+            if (leap && this->month == 2) dm++;
+            if (days < dm) break;
+            days -= dm;
+        }
+        this->day = days + 1;
+
+#elif _UNIX_ALG == UNIX_ALG_TIME_T
+        time_t t = u - 946684800;
+        tm tt;
+        gmtime_r(&t, &tt);
+        this->year = tt.tm_year + 1900;
+        this->month = tt.tm_mon + 1;
+        this->day = tt.tm_mday;
+        this->hour = tt.tm_hour;
+        this->minute = tt.tm_min;
+        this->second = tt.tm_sec;
+        this->weekDay = tt.tm_wday;
+        if (!this->weekDay) this->weekDay = 7;
+        this->yearDay = tt.tm_yday + 1;
+#endif
+    }
+
     // =========== EXPORT ============
     // вывести время в секунды (без учёта даты)
     uint32_t toSeconds() {
-        return hour * 3600ul + minute * 60 + second;
+        uint32_t sec = second;
+        if (minute) sec += minute * 60;
+        if (hour) sec += hour * 3600ul;
+        return sec;
+    }
+
+    // вывести в unix-секунды
+    uint32_t getUnix() {
+        int16_t zone = getStampZone();
+        if (zone && zone >= -12 && zone <= 14) zone *= 60;  // to minutes
+        return StampUtils::dateToUnix(day, month, year, hour, minute, second, zone);
     }
 
     // ========== TO STRING ==========
-    // вывести дату в формате "dd.mm.yyyy"
+    // вывести дату в формате "dd.mm.yyyy". Вернёт указатель на конец строки
     char* dateToChar(char* buf) {
         buf[0] = day / 10 + '0';
         buf[1] = day % 10 + '0';
@@ -127,7 +346,7 @@ struct Datime {
         return buf;
     }
 
-    // вывести время в формате "hh:mm:ss"
+    // вывести время в формате "hh:mm:ss". Вернёт указатель на конец строки
     char* timeToChar(char* buf) {
         buf[0] = hour / 10 + '0';
         buf[1] = hour % 10 + '0';
@@ -148,7 +367,7 @@ struct Datime {
         return buf;
     }
 
-    // вывести в формате dd.mm.yyyy hh:mm:ss
+    // вывести в формате dd.mm.yyyy hh:mm:ss. Вернёт указатель на конец строки
     char* toChar(char* buf, char div = ' ') {
         char* s = buf;
         s = dateToChar(s);
@@ -189,9 +408,7 @@ struct Datime {
         return 1;
     }
 
-    // yyyy-mm-dd
-    // hh:mm:ss
-    // yyyy-mm-ddThh:mm:ss
+    // hh:mm:ss или yyyy-mm-dd или yyyy-mm-ddThh:mm:ss
     bool parse(const char* s) {
         uint16_t len = strlen(s);
         if (len == 19 && s[10] == 'T') {  // dateTtime
@@ -247,5 +464,162 @@ struct Datime {
         minute = atoi(s + 15);
         second = atoi(s + 18);
         return 1;
+    }
+
+    // =========== COMPARE ===========
+    bool operator==(Datime& dt) {
+        return _equals(dt);
+    }
+    bool operator>(Datime& dt) {
+        return _more(dt);
+    }
+    bool operator>=(Datime& dt) {
+        return _equals(dt) || _more(dt);
+    }
+    bool operator<(Datime& dt) {
+        return _less(dt);
+    }
+    bool operator<=(Datime& dt) {
+        return _equals(dt) || _less(dt);
+    }
+
+    // ============= ADD =============
+    // добавить секунды
+    void addSeconds(uint32_t s) {
+        if (!s) return;
+        if (s == 1) {
+            second++;
+            _update();
+        } else {
+            s += second;
+            ldiv_t res;
+            res = ldiv(s, 60L);
+            second = res.rem;
+            addMinutes(res.quot);
+        }
+    }
+
+    // добавить минуты
+    void addMinutes(uint32_t m) {
+        if (!m) return;
+        if (m == 1) {
+            minute++;
+            _update();
+        } else {
+            m += minute;
+            ldiv_t res;
+            res = ldiv(m, 60L);
+            minute = res.rem;
+            addHours(res.quot);
+        }
+    }
+
+    // добавить часы
+    void addHours(uint32_t h) {
+        if (!h) return;
+        if (h == 1) {
+            hour++;
+            _update();
+        } else {
+            h += hour;
+            ldiv_t res;
+            res = ldiv(h, 24L);
+            hour = res.rem;
+            addDays(res.quot);
+        }
+    }
+
+    // добавить дни
+    void addDays(uint32_t d) {
+        while (d) {
+            d--;
+            day++;
+            weekDay++;
+            yearDay++;
+            _update();
+        }
+    }
+
+    // ============= NEXT =============
+    // следующая секунда
+    void nextSecond() {
+        addSeconds(1);
+    }
+
+    // следующая минута (xx:xx:00)
+    void nextMinute() {
+        addMinutes(1);
+        second = 0;
+    }
+
+    // следующий час (xx:00:00)
+    void nextHour() {
+        addHours(1);
+        second = 0;
+        minute = 0;
+    }
+
+    // следующий день (00:00:00)
+    void nextDay() {
+        addDays(1);
+        second = 0;
+        minute = 0;
+        hour = 0;
+    }
+
+    // следующий месяц (1 число 00:00:00)
+    void nextMonth() {
+        month++;
+        day = 1;
+        hour = minute = second = 0;
+        if (month > 12) {
+            year++;
+            month = 1;
+        }
+        updateDays();
+    }
+
+    // обновить weekDay и yearDay исходя из текущей даты (после ручного изменения)
+    void updateDays() {
+        weekDay = StampUtils::dateToWeekDay(day, month, year);
+        yearDay = StampUtils::dateToYearDay(day, month, year);
+    }
+
+   private:
+    void _update() {
+        if (second > 59) {
+            second = 0;
+            minute++;
+        }
+        if (minute > 59) {
+            minute = 0;
+            hour++;
+        }
+        if (hour > 23) {
+            hour = 0;
+            weekDay++;
+            yearDay++;
+            day++;
+        }
+        if (weekDay > 7) weekDay = 1;
+        if (day > StampUtils::daysInMonth(month, year)) {
+            month++;
+            day = 1;
+        }
+        if (month > 12) {
+            year++;
+            month = 1;
+            yearDay = 1;
+        }
+    }
+
+    bool _equals(Datime& dt) {
+        return (year == dt.year) && (month = dt.month) && (day = dt.day) && (hour == dt.hour) && (minute == dt.minute) && (second == dt.second);
+    }
+    bool _more(Datime& dt) {
+        return getUnix() > dt.getUnix();
+    }
+    bool _less(Datime& dt) {
+        return getUnix() < dt.getUnix();
     }
 };

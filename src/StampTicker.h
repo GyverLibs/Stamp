@@ -4,84 +4,81 @@
 #include "Stamp.h"
 
 class StampTicker : public Stamp {
-  public:
-    StampTicker() {
-      unix = 0;
-    }
-
-    // установить текущий unix, дополнительно миллисекунды
-    void update(uint32_t nunix, uint16_t ms = 0) {
-      unix = nunix;
-      _updTime = millis() - ms;
-    }
-
-    // время синхронизировано
-    bool synced() {
-      return unix;
-    }
-
-    // получить миллисекунды текущей секунды
-    uint16_t ms() {
-      return (millis() - _updTime) % 1000;
-    }
-
-    uint32_t getUnix() {
-      // защита от переполнения разности через 50 суток
-      uint32_t ms = millis();
-      uint32_t diff = ms - _updTime;
-      if (diff > 86400000ul) {  // 24h
-        unix += diff / 1000ul;
-        _updTime = ms - diff % 1000ul;
-        diff = 0;
-      }
-      return unix + diff / 1000ul;
-    }
-
-  private:
-    uint32_t _updTime = 0;
-};
-
-/*
-// backup
-class StampTicker : public Stamp {
    public:
-    // установить текущий unix, дополнительно миллисекунды
-    void update(uint32_t nunix, uint16_t ms = 0) {
-        _unixBuf = nunix;
+    StampTicker() {}
+
+    // установить текущий unix, дополнительно миллисекунды синхронизации
+    StampTicker(uint32_t unix, uint16_t ms = 0) {
+        update(unix, ms);
+    }
+
+    // установить текущий unix, дополнительно миллисекунды синхронизации
+    void update(uint32_t unix, uint16_t ms = 0) {
+        this->unix = _syncUnix = unix;
         _updTime = millis() - ms;
-        _sync(true);
+        _secTmr = _updTime;
+    }
+
+    // подключить функцию-обработчик срабатывания (вида void f())
+    void attach(void (*handler)()) {
+        _cb = *handler;
+    }
+
+    // отключить функцию-обработчик срабатывания
+    void detach() {
+        _cb = nullptr;
+    }
+
+    // тикер, вызывать в loop. Обновляет unix раз в секунду. Вернёт true каждую секунду с учётом мс синхронизации
+    bool tick() {
+        _ready = 0;
+        uint16_t timeLeft = (uint16_t)millis() - _secTmr;
+        if (timeLeft >= 1000) {
+            _secTmr += ((timeLeft >= 2 * 1000) ? (timeLeft / 1000) : 1) * 1000;
+            _ready = 1;
+            unix = calcUnix();
+            if (_cb) _cb();
+        }
+        return _ready;
+    }
+
+    // возвращает true каждую секунду
+    bool ready() {
+        return _ready;
     }
 
     // время синхронизировано
     bool synced() {
-        return _unixBuf;
+        return _syncUnix;
     }
 
     // получить миллисекунды текущей секунды
     uint16_t ms() {
-        return (millis() - _updTime) % 1000;
+        uint16_t m = (uint16_t)millis() - _secTmr;
+        return (m >= 1000) ? ((millis() - _updTime) % 1000ul) : m;  // если не вызывался тикер
     }
 
-   private:
-    void _sync(bool force = 0) {
-        if (!synced()) return;
-
+    // вычислить и получить текущий unix
+    uint32_t calcUnix() {
+        if (!synced()) return 0;
         uint32_t ms = millis();
-        if (!force && (uint16_t)((uint16_t)ms - _secTmr) < 900) return;
-        _secTmr = ms;
-
-        // защита от переполнения разности через 50 суток
         uint32_t diff = ms - _updTime;
         if (diff > 86400000ul) {  // 24h
-            _unixBuf += diff / 1000ul;
+            _syncUnix += diff / 1000ul;
             _updTime = ms - diff % 1000ul;
             diff = 0;
         }
-        unix = _unixBuf + diff / 1000ul;
+        return _syncUnix + diff / 1000ul;
     }
 
+    operator uint32_t*() {
+        return &unix;
+    }
+
+   private:
+    void (*_cb)() = nullptr;
+    uint32_t _syncUnix = 0;
     uint32_t _updTime = 0;
-    uint32_t _unixBuf = 0;  // sync
     uint16_t _secTmr = 0;
+    bool _ready = 0;
 };
-*/

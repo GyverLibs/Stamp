@@ -11,35 +11,19 @@
 - Используются более быстрые алгоритмы преобразования, чем в time.h
 - Хранит дату и время в 4 байт переменной (секунды с 01.01.2000)
 - Преобразует в год, месяц, день, часы, минуты, секунды, день недели, день года
-- Может поддерживать время на базе millis()
+- Может считать и поддерживать время на базе millis()
 - Парсинг из строк
+- Работает ~до 2106 года
 
 ### Совместимость
 Совместима со всеми Arduino платформами (используются Arduino-функции)
 
 ## Содержание
-- [Установка](#install)
 - [Документация](#reference)
 - [Пример](#example)
 - [Версии](#versions)
+- [Установка](#install)
 - [Баги и обратная связь](#feedback)
-
-<a id="install"></a>
-## Установка
-- Библиотеку можно найти по названию **Stamp** и установить через менеджер библиотек в:
-    - Arduino IDE
-    - Arduino IDE v2
-    - PlatformIO
-- [Скачать библиотеку](https://github.com/GyverLibs/Stamp/archive/refs/heads/main.zip) .zip архивом для ручной установки:
-    - Распаковать и положить в *C:\Program Files (x86)\Arduino\libraries* (Windows x64)
-    - Распаковать и положить в *C:\Program Files\Arduino\libraries* (Windows x32)
-    - Распаковать и положить в *Документы/Arduino/libraries/*
-    - (Arduino IDE) автоматическая установка из .zip: *Скетч/Подключить библиотеку/Добавить .ZIP библиотеку…* и указать скачанный архив
-- Читай более подробную инструкцию по установке библиотек [здесь](https://alexgyver.ru/arduino-first/#%D0%A3%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0_%D0%B1%D0%B8%D0%B1%D0%BB%D0%B8%D0%BE%D1%82%D0%B5%D0%BA)
-### Обновление
-- Рекомендую всегда обновлять библиотеку: в новых версиях исправляются ошибки и баги, а также проводится оптимизация и добавляются новые фичи
-- Через менеджер библиотек IDE: найти библиотеку как при установке и нажать "Обновить"
-- Вручную: **удалить папку со старой версией**, а затем положить на её место новую. "Замену" делать нельзя: иногда в новых версиях удаляются файлы, которые останутся при замене и могут привести к ошибкам!
 
 <a id="reference"></a>
 
@@ -68,16 +52,19 @@ uint16_t yearDay;   // день года (1.. 365-366)
 ```cpp
 // ============ КОНСТРУКТОР ============
 Datime;
+Datime(unix);                       // unix время
 Datime(year, month, day);           // год, месяц, день
 Datime(hour, minute, second);       // час, минута, секунда
 Datime(year, month, day, hour, minute, second);
 Datime(const char* str);            // строка вида yyyy-mm-ddThh:mm:ss
 
 // ============= УСТАНОВКА =============
+void set(unix);                     // unix время
 void set(year, month, day);         // год, месяц, день
 void set(hour, minute, second);     // час, минута, секунда
 void set(year, month, day, hour, minute, second);
 
+// ============= ПАРСИНГ ==============
 bool parseDate(const char* s);      // из строки вида yyyy-mm-dd
 bool parseTime(const char* s);      // из строки вида hh:mm:ss
 bool parse(const char* s);          // из строки вида yyyy-mm-dd или hh:mm:ss или yyyy-mm-ddThh:mm:ss
@@ -85,6 +72,7 @@ bool parseHTTP(const char* s);      // из строки вида <day_week>, dd
 
 // ============== ЭКСПОРТ ==============
 uint32_t toSeconds();               // вывести время в секунды (без учёта даты)
+uint32_t getUnix();                 // вывести в unix-секунды
 
 // ============= В СТРОКУ ==============
 // вывести дату в формате "dd.mm.yyyy"
@@ -98,7 +86,32 @@ String timeToString();
 // вывести в формате dd.mm.yyyy hh:mm:ss, div - разделитель
 char* toChar(char* buf, char div = ' ');
 String toString(char div = ' ');
+
+// ============= ДОБАВИТЬ ==============
+void addSeconds(uint32_t s);    // добавить секунды
+void addMinutes(uint32_t m);    // добавить минуты
+void addHours(uint32_t h);      // добавить часы
+void addDays(uint32_t d);       // добавить дни
+
+void nextSecond();              // следующая секунда
+void nextMinute();              // следующая минута (xx:xx:00)
+void nextHour();                // следующий час (xx:00:00)
+void nextDay();                 // следующий день (00:00:00)
+void nextMonth();               // следующий месяц (1 число 00:00:00)
+
+void updateDays();              // обновить weekDay и yearDay исходя из текущей даты (после ручного изменения)
+
+// ============= АЛГОРИТМ =============
+// Алгоритм преобразования времени задаётся перед подключением библиотеки
+// для исследования и просто так чтобы было
+#define UNIX_ALG UNIX_ALG_0       // ~402us и ~94B Flash (AVR)
+#define UNIX_ALG UNIX_ALG_1       // ~298us и ~138B Flash (AVR)
+#define UNIX_ALG UNIX_ALG_2       // ~216us и ~584B Flash (AVR)
+#define UNIX_ALG UNIX_ALG_3       // ~297us и ~178B Flash (AVR)
+#define UNIX_ALG UNIX_ALG_TIME_T  // ~246us и ~842B Flash (AVR)
 ```
+
+> Все добавления времени в Datime выполняются напрямую, без конвертации в unix, т.е. довольно быстро.
 
 ### Stamp
 Хранит дату и время в одной переменной `uint32_t` - UNIX время
@@ -106,7 +119,7 @@ String toString(char div = ' ');
 ```cpp
 // ============ КОНСТРУКТОР ============
 Stamp;
-Stamp(uint32_t u);              // из uint32_t
+Stamp(uint32_t unix);           // из unix
 Stamp(Datime& dt);              // из Datime
 Stamp(year, month, day);        // год, месяц, день
 Stamp(hour, minute, second);    // час, минута, секунда
@@ -142,23 +155,76 @@ String timeToString();
 // вывести в формате dd.mm.yyyy hh:mm:ss, div - разделитель
 char* toChar(char* buf, char div = ' ');
 String toString(char div = ' ');
-
-// ============= АЛГОРИТМ =============
-// Алгоритм преобразования времени задаётся перед подключением библиотеки
-// для исследования и просто так чтобы было
-#define STAMP_ALG STAMP_ALG_0
-#define STAMP_ALG STAMP_ALG_1
-#define STAMP_ALG STAMP_ALG_2       // по умолчанию
-#define STAMP_ALG STAMP_ALG_TIME_T  // на базе time_t
 ```
 
 ### StampTicker
-Тот же `Stamp`, но поддерживает время через `millis()` с возможностью синхронизации
+Тот же `Stamp`, но сохраняет счёт времени на базе `millis()` после синхронизации. Сигналит раз в секунду, можно подключить обработчик. Имеет тикер, нужно вызывать его в `loop()`.
 
 ```cpp
-void update(uint32_t nunix, uint16_t ms = 0);   // установить текущий unix, дополнительно миллисекунды
-bool synced();  // время синхронизировано
-uint16_t ms();  // получить миллисекунды текущей секунды
+// установить текущий unix, дополнительно миллисекунды синхронизации
+StampTicker(uint32_t unix, uint16_t ms = 0);
+
+// установить текущий unix, дополнительно миллисекунды синхронизации
+void update(uint32_t unix, uint16_t ms = 0);
+
+void attach(f);             // подключить функцию-обработчик срабатывания (вида void f())
+void detach();              // отключить функцию-обработчик срабатывания
+
+bool ready();               // возвращает true каждую секунду
+bool synced();              // время синхронизировано
+uint16_t ms();              // получить миллисекунды текущей секунды
+uint32_t calcUnix();        // вычислить и получить текущий unix
+
+// тикер, вызывать в loop. Обновляет unix раз в секунду. Вернёт true каждую секунду с учётом мс синхронизации
+bool tick();
+```
+
+### StampSync
+Тот же `Stamp`, но сохраняет счёт времени на базе `millis()` после синхронизации. Работает без тикера.
+
+```cpp
+// установить текущий unix, дополнительно миллисекунды синхронизации
+StampSync(uint32_t unix, uint16_t ms = 0);
+
+// установить текущий unix, дополнительно миллисекунды синхронизации
+void update(uint32_t unix, uint16_t ms = 0);
+
+bool synced();      // время синхронизировано
+uint32_t getUnix(); // получить текущий unix
+uint16_t ms();      // получить миллисекунды текущей секунды
+```
+
+### Утилиты
+Набор функций для работы со временем и датой
+
+```cpp
+// время в секунды
+uint32_t StampUtils::timeToSeconds(uint8_t hours, uint8_t minutes, uint8_t seconds);
+
+// високосный год
+bool StampUtils::isLeap(uint16_t year);
+
+// дней в месяце без учёта года (февраль 28)
+uint8_t StampUtils::daysInMonth(uint8_t month);
+
+// дней в месяце с учётом високосного года
+uint8_t StampUtils::daysInMonth(uint8_t month, uint16_t year);
+
+// дней года к месяцу (янв 0, фев 31, март 59/60...)
+uint16_t StampUtils::daysToMonth(uint8_t month, uint16_t year);
+
+// дата в день текущего года (начиная с 1)
+uint16_t StampUtils::dateToYearDay(uint8_t day, uint8_t month, uint16_t year);
+
+// дата в день недели (пн 1.. вс 7)
+uint8_t StampUtils::dateToWeekDay(uint8_t day, uint8_t month, uint16_t year);
+
+// дата в количество дней с 01.01.2000 (начиная с 0)
+uint16_t StampUtils::dateToDays2000(uint8_t day, uint8_t month, uint16_t year);
+
+// дата в unix время, zone в минутах
+uint32_t StampUtils::dateToUnix(uint8_t day, uint8_t month, uint16_t year, uint8_t hour, uint8_t minute, uint8_t seconds, int16_t zone = 0);
+
 ```
 
 <a id="example"></a>
@@ -182,6 +248,24 @@ Serial.println(s.toString());
 <a id="versions"></a>
 ## Версии
 - v1.0
+- v1.1 - добавлено много новых инструментов и возможностей
+
+<a id="install"></a>
+## Установка
+- Библиотеку можно найти по названию **Stamp** и установить через менеджер библиотек в:
+    - Arduino IDE
+    - Arduino IDE v2
+    - PlatformIO
+- [Скачать библиотеку](https://github.com/GyverLibs/Stamp/archive/refs/heads/main.zip) .zip архивом для ручной установки:
+    - Распаковать и положить в *C:\Program Files (x86)\Arduino\libraries* (Windows x64)
+    - Распаковать и положить в *C:\Program Files\Arduino\libraries* (Windows x32)
+    - Распаковать и положить в *Документы/Arduino/libraries/*
+    - (Arduino IDE) автоматическая установка из .zip: *Скетч/Подключить библиотеку/Добавить .ZIP библиотеку…* и указать скачанный архив
+- Читай более подробную инструкцию по установке библиотек [здесь](https://alexgyver.ru/arduino-first/#%D0%A3%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0_%D0%B1%D0%B8%D0%B1%D0%BB%D0%B8%D0%BE%D1%82%D0%B5%D0%BA)
+### Обновление
+- Рекомендую всегда обновлять библиотеку: в новых версиях исправляются ошибки и баги, а также проводится оптимизация и добавляются новые фичи
+- Через менеджер библиотек IDE: найти библиотеку как при установке и нажать "Обновить"
+- Вручную: **удалить папку со старой версией**, а затем положить на её место новую. "Замену" делать нельзя: иногда в новых версиях удаляются файлы, которые останутся при замене и могут привести к ошибкам!
 
 <a id="feedback"></a>
 ## Баги и обратная связь
