@@ -38,6 +38,7 @@ second	KEYWORD2
 weekDay	KEYWORD2
 yearDay	KEYWORD2
 set	KEYWORD2
+toDaySeconds	KEYWORD2
 toSeconds	KEYWORD2
 getUnix	KEYWORD2
 dateToChar	KEYWORD2

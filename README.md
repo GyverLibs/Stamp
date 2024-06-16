@@ -32,7 +32,7 @@
 ### TimeZone
 ```cpp
 void setStampZone(int zone);    // установить глобальную часовую зону в часах или минутах
-int getStampZone();             // получить глобальную часовую зону
+int getStampZone();             // получить глобальную часовую зону в минутах
 ```
 
 ### Datime
@@ -139,10 +139,13 @@ bool parseHTTP(const char* s);  // из строки вида <day_week>, dd <mo
 // ============== ЭКСПОРТ =============
 Datime get();           // экспортировать в формат Datime
 void get(Datime& dt);   // экспортировать в переменную типа Datime
-uint32_t toSeconds();   // получить секунды
-uint32_t toMinutes();   // получить минуты
-uint32_t toHours();     // получить часы
-uint32_t toDays();      // получить сутки
+uint32_t toSeconds();   // получить секунды (с epoch)
+uint32_t toMinutes();   // получить минуты (с epoch)
+uint32_t toHours();     // получить часы (с epoch)
+uint32_t toDays();      // получить сутки (с epoch)
+
+// получить секунды с начала текущих суток
+uint32_t toDaySeconds();
 
 // ============= В СТРОКУ =============
 // вывести дату в формате "dd.mm.yyyy"

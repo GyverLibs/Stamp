@@ -124,19 +124,17 @@ class Datime {
 
     // установить из unix времени и глобального часового пояса setStampZone
     void set(uint32_t unix) {
-        int16_t zone = getStampZone();
-        if (zone >= -12 && zone <= 14) zone *= 60;  // to minutes
-        uint32_t u = unix + zone * 60ul;
+        unix += getStampZone() * 60l;
 
 #if _UNIX_ALG == UNIX_ALG_0
-        this->second = u % 60ul;
-        u /= 60ul;
-        this->minute = u % 60ul;
-        u /= 60ul;
-        this->hour = u % 24ul;
-        u /= 24ul;
-        this->weekDay = (u + 3) % 7 + 1;
-        uint32_t z = u + 719468;
+        this->second = unix % 60ul;
+        unix /= 60ul;
+        this->minute = unix % 60ul;
+        unix /= 60ul;
+        this->hour = unix % 24ul;
+        unix /= 24ul;
+        this->weekDay = (unix + 3) % 7 + 1;
+        uint32_t z = unix + 719468;
         uint8_t era = z / 146097ul;
         uint16_t doe = z - era * 146097ul;
         uint16_t yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
@@ -153,8 +151,8 @@ class Datime {
         int32_t days, rem;
         int years400, years100, years4, remainingyears;
 
-        days = u / 86400ul - 11017;
-        rem = u % 86400ul;
+        days = unix / 86400ul - 11017;
+        rem = unix % 86400ul;
         if (rem < 0) {
             rem += 86400ul;
             days--;
@@ -209,11 +207,11 @@ class Datime {
         uint16_t days, n, leapyear, years;
         ldiv_t lresult;
         div_t result;
-        if (u < 946684800) u = 946684800;
+        if (unix < 946684800) unix = 946684800;
 
-        u -= 946684800;              // to 2000-01-01 UTC
-        days = u / 86400UL;          // 38753+
-        fract = u - days * 86400UL;  // 86400
+        unix -= 946684800;              // to 2000-01-01 UTC
+        days = unix / 86400UL;          // 38753+
+        fract = unix - days * 86400UL;  // 86400
 
         lresult = ldiv(fract, 60L);  // 86400
         this->second = lresult.rem;
@@ -267,14 +265,14 @@ class Datime {
         this->month++;
 
 #elif _UNIX_ALG == UNIX_ALG_3
-        u -= 946684800;
-        this->second = u % 60ul;
-        u /= 60ul;
-        this->minute = u % 60ul;
-        u /= 60ul;
-        this->hour = u % 24ul;
+        unix -= 946684800;
+        this->second = unix % 60ul;
+        unix /= 60ul;
+        this->minute = unix % 60ul;
+        unix /= 60ul;
+        this->hour = unix % 24ul;
 
-        uint16_t days = u / 24ul;
+        uint16_t days = unix / 24ul;
         this->weekDay = (days + 5) % 7 + 1;
 
         bool leap;
@@ -295,7 +293,7 @@ class Datime {
         this->day = days + 1;
 
 #elif _UNIX_ALG == UNIX_ALG_TIME_T
-        time_t t = u - 946684800;
+        time_t t = unix - 946684800;
         tm tt;
         gmtime_r(&t, &tt);
         this->year = tt.tm_year + 1900;
@@ -321,9 +319,7 @@ class Datime {
 
     // вывести в unix-секунды
     uint32_t getUnix() {
-        int16_t zone = getStampZone();
-        if (zone && zone >= -12 && zone <= 14) zone *= 60;  // to minutes
-        return StampUtils::dateToUnix(day, month, year, hour, minute, second, zone);
+        return StampUtils::dateToUnix(day, month, year, hour, minute, second, getStampZone());
     }
 
     // ========== TO STRING ==========

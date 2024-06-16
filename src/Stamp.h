@@ -152,6 +152,11 @@ class Stamp {
         return getUnix() / 86400ul;
     }
 
+    // получить секунды с начала текущих суток
+    uint32_t toDaySeconds() {
+        return (getUnix() + getStampZone() * 60l) % 86400;
+    }
+
     // =========== OVERLOAD ===========
     // получить время в секундах
     virtual uint32_t getUnix() {
