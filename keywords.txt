@@ -61,6 +61,7 @@ nextHour	KEYWORD2
 nextDay	KEYWORD2
 nextMonth	KEYWORD2
 updateDays	KEYWORD2
+dayIndex	KEYWORD2
 
 get	KEYWORD2
 ms	KEYWORD2

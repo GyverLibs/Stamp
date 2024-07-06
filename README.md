@@ -59,6 +59,13 @@ Datime(hour, minute, second);       // час, минута, секунда
 Datime(year, month, day, hour, minute, second);
 Datime(const char* str);            // строка вида yyyy-mm-ddThh:mm:ss
 
+// ============= ПРОЧЕЕ =============
+// високосный ли год
+bool isLeap();
+
+// день года как индекс массива от 0 до 365 независимо от високосного года. 29 февраля имеет индекс 59
+uint16_t dayIndex();
+
 // ============= УСТАНОВКА =============
 void set(unix);                     // unix время
 void set(year, month, day);         // год, месяц, день

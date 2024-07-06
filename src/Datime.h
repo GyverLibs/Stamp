@@ -107,6 +107,7 @@ class Datime {
         this->hour = hour;
         this->minute = minute;
         this->second = second;
+        updateDays();
     }
 
     // установить время (год, месяц, день) или (час, минута, секунда). Автоматически при час > 60
@@ -120,6 +121,7 @@ class Datime {
             minute = mm;
             second = ds;
         }
+        updateDays();
     }
 
     // установить из unix времени и глобального часового пояса setStampZone
@@ -477,6 +479,16 @@ class Datime {
     }
     bool operator<=(Datime& dt) {
         return _equals(dt) || _less(dt);
+    }
+
+    // високосный ли год
+    bool isLeap() {
+        return StampUtils::isLeap(year);
+    }
+
+    // день года как индекс массива от 0 до 365 независимо от високосного года. 29 февраля имеет индекс 59
+    uint16_t dayIndex() {
+        return ((yearDay >= 60) ? (isLeap() ? yearDay : yearDay + 1) : yearDay) - 1;
     }
 
     // ============= ADD =============
