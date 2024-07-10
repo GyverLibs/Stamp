@@ -1,14 +1,14 @@
 #include <Arduino.h>
 #include <StampTicker.h>
 
-StampTicker sync;
+StampTicker st;
 
 void setup() {
     Serial.begin(115200);
-    // sync.update(Stamp("2022-12-05T12:25:34"));
-    sync.update(1695146928);
+    // st.update(Stamp("2022-12-05T12:25:34"));
+    st.update(1695146928);
 }
 void loop() {
-  Serial.println(sync.toString());
+  Serial.println(st.toString());
   delay(1000);
 }
