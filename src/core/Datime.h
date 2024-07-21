@@ -4,11 +4,11 @@
 #include "StampUtils.h"
 #include "stamp_zone.h"
 
-#define UNIX_ALG_0 0       // ~402us и ~94B Flash (AVR)
-#define UNIX_ALG_1 1       // ~298us и ~138B Flash (AVR)
-#define UNIX_ALG_2 2       // ~216us и ~584B Flash (AVR)
-#define UNIX_ALG_3 3       // ~297us и ~178B Flash (AVR)
-#define UNIX_ALG_TIME_T 4  // ~246us и ~842B Flash (AVR)
+#define UNIX_ALG_0 0       // ~402us / ~94B Flash (AVR)
+#define UNIX_ALG_1 1       // ~298us / ~138B Flash (AVR)
+#define UNIX_ALG_2 2       // ~216us / ~584B Flash (AVR)
+#define UNIX_ALG_3 3       // ~297us / ~178B Flash (AVR)
+#define UNIX_ALG_TIME_T 4  // ~246us / ~842B Flash (AVR)
 
 #ifndef UNIX_ALG
 #define _UNIX_ALG UNIX_ALG_3
@@ -98,6 +98,11 @@ class Datime {
         set(yh, mm, ds);
     }
 
+    Datime& operator=(uint32_t unix) {
+        set(unix);
+        return *this;
+    }
+
     // ============= SET =============
     // установить время (год, месяц, день, час, минута, секунда)
     void set(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second) {
@@ -110,9 +115,9 @@ class Datime {
         updateDays();
     }
 
-    // установить время (год, месяц, день) или (час, минута, секунда). Автоматически при час > 60
+    // установить время (год, месяц, день) или (час, минута, секунда)
     void set(uint16_t yh, uint16_t mm, uint16_t ds) {
-        if (yh > 60) {
+        if (yh >= 24) {
             year = yh;
             month = mm;
             day = ds;
@@ -277,7 +282,7 @@ class Datime {
         uint16_t days = unix / 24ul;
         this->weekDay = (days + 5) % 7 + 1;
 
-        bool leap;
+        bool leap = 0;
         for (this->year = 0;; this->year++) {
             leap = !(this->year & 3);
             if (days < 365u + leap) break;
@@ -311,8 +316,8 @@ class Datime {
     }
 
     // =========== EXPORT ============
-    // вывести время в секунды (без учёта даты)
-    uint32_t toSeconds() {
+    // вывести в секунды с начала текущих суток
+    uint32_t toDaySeconds() const {
         uint32_t sec = second;
         if (minute) sec += minute * 60;
         if (hour) sec += hour * 3600ul;
@@ -320,13 +325,13 @@ class Datime {
     }
 
     // вывести в unix-секунды
-    uint32_t getUnix() {
+    uint32_t getUnix() const {
         return StampUtils::dateToUnix(day, month, year, hour, minute, second, getStampZone());
     }
 
     // ========== TO STRING ==========
     // вывести дату в формате "dd.mm.yyyy". Вернёт указатель на конец строки
-    char* dateToChar(char* buf) {
+    char* dateToChar(char* buf) const {
         buf[0] = day / 10 + '0';
         buf[1] = day % 10 + '0';
         buf[2] = '.';
@@ -338,14 +343,14 @@ class Datime {
     }
 
     // вывести дату в формате "dd.mm.yyyy"
-    String dateToString() {
+    String dateToString() const {
         char buf[10];
         dateToChar(buf);
         return buf;
     }
 
     // вывести время в формате "hh:mm:ss". Вернёт указатель на конец строки
-    char* timeToChar(char* buf) {
+    char* timeToChar(char* buf) const {
         buf[0] = hour / 10 + '0';
         buf[1] = hour % 10 + '0';
         buf[2] = ':';
@@ -359,21 +364,21 @@ class Datime {
     }
 
     // вывести время в формате "hh:mm:ss"
-    String timeToString() {
+    String timeToString() const {
         char buf[8];
         timeToChar(buf);
         return buf;
     }
 
     // вывести в формате dd.mm.yyyy hh:mm:ss. Вернёт указатель на конец строки
-    char* toChar(char* buf, char div = ' ') {
+    char* toChar(char* buf, char div = ' ') const {
         char* s = buf;
         s = dateToChar(s);
         s[0] = div;
         s = timeToChar(s + 1);
         return s;
     }
-    String toString(char div = ' ') {
+    String toString(char div = ' ') const {
         char buf[20];
         toChar(buf, div);
         return buf;
@@ -465,29 +470,32 @@ class Datime {
     }
 
     // =========== COMPARE ===========
-    bool operator==(Datime& dt) {
+    bool operator==(const Datime& dt) const {
         return _equals(dt);
     }
-    bool operator>(Datime& dt) {
-        return _more(dt);
+    bool operator!=(const Datime& dt) const {
+        return !_equals(dt);
     }
-    bool operator>=(Datime& dt) {
-        return _equals(dt) || _more(dt);
+    bool operator>(const Datime& dt) const {
+        return getUnix() > dt.getUnix();
     }
-    bool operator<(Datime& dt) {
-        return _less(dt);
+    bool operator>=(const Datime& dt) const {
+        return getUnix() >= dt.getUnix();
     }
-    bool operator<=(Datime& dt) {
-        return _equals(dt) || _less(dt);
+    bool operator<(const Datime& dt) const {
+        return getUnix() < dt.getUnix();
+    }
+    bool operator<=(const Datime& dt) const {
+        return getUnix() <= dt.getUnix();
     }
 
     // високосный ли год
-    bool isLeap() {
+    bool isLeap() const {
         return StampUtils::isLeap(year);
     }
 
     // день года как индекс массива от 0 до 365 независимо от високосного года. 29 февраля имеет индекс 59
-    uint16_t dayIndex() {
+    uint16_t dayIndex() const {
         return ((yearDay >= 60) ? (isLeap() ? yearDay : yearDay + 1) : yearDay) - 1;
     }
 
@@ -563,23 +571,20 @@ class Datime {
     // следующий час (xx:00:00)
     void nextHour() {
         addHours(1);
-        second = 0;
-        minute = 0;
+        second = minute = 0;
     }
 
     // следующий день (00:00:00)
     void nextDay() {
         addDays(1);
-        second = 0;
-        minute = 0;
-        hour = 0;
+        second = minute = hour = 0;
     }
 
     // следующий месяц (1 число 00:00:00)
     void nextMonth() {
         month++;
         day = 1;
-        hour = minute = second = 0;
+        second = minute = hour = 0;
         if (month > 12) {
             year++;
             month = 1;
@@ -621,13 +626,7 @@ class Datime {
         }
     }
 
-    bool _equals(Datime& dt) {
-        return (year == dt.year) && (month = dt.month) && (day = dt.day) && (hour == dt.hour) && (minute == dt.minute) && (second == dt.second);
-    }
-    bool _more(Datime& dt) {
-        return getUnix() > dt.getUnix();
-    }
-    bool _less(Datime& dt) {
-        return getUnix() < dt.getUnix();
+    bool _equals(const Datime& dt) const {
+        return (year == dt.year) && (month == dt.month) && (day == dt.day) && (hour == dt.hour) && (minute == dt.minute) && (second == dt.second);
     }
 };

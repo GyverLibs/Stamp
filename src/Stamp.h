@@ -1,13 +1,11 @@
 #pragma once
 #include <Arduino.h>
 
-#include "Datime.h"
-#include "StampUtils.h"
-#include "stamp_zone.h"
+#include "core/StampCore.h"
 
-class Stamp {
+class Stamp : public StampCore {
    public:
-    uint32_t unix;
+    uint32_t unix = 0;
 
     // ========== CONSTRUCT ==========
     Stamp() {}
@@ -18,79 +16,30 @@ class Stamp {
     Stamp(uint32_t unix) {
         this->unix = unix;
     }
-    Stamp(Datime& dt) {
+    Stamp(const Datime& dt) {
         set(dt);
     }
     Stamp(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second) {
-        Datime dt(year, month, day, hour, minute, second);
-        set(dt);
+        set(year, month, day, hour, minute, second);
     }
     Stamp(uint16_t yh, uint16_t mm, uint16_t ds) {
-        Datime dt(yh, mm, ds);
-        set(dt);
-    }
-
-    // ============ TO STRING ============
-    // вывести дату в формате "dd.mm.yyyy"
-    char* dateToChar(char* buf) {
-        Datime dt(getUnix());
-        return dt.dateToChar(buf);
-    }
-    String dateToString() {
-        Datime dt(getUnix());
-        return dt.dateToString();
-    }
-
-    // вывести время в формате "hh:mm:ss"
-    char* timeToChar(char* buf) {
-        Datime dt(getUnix());
-        return dt.timeToChar(buf);
-    }
-    String timeToString() {
-        Datime dt(getUnix());
-        return dt.timeToString();
-    }
-
-    char* toChar(char* buf, char div = ' ') {
-        Datime dt(getUnix());
-        return dt.toChar(buf, div);
-    }
-    String toString(char div = ' ') {
-        Datime dt(getUnix());
-        return dt.toString();
-    }
-
-    // =========== GET TIME ===========
-    // экспортировать в формат Datime
-    Datime get() {
-        return Datime(getUnix());
-    }
-
-    // экспортировать в переменную типа Datime
-    void get(Datime& dt) {
-        dt.set(getUnix());
+        set(yh, mm, ds);
     }
 
     // =========== SET TIME ============
     // установить время из Datime
-    void set(Datime& dt) {
-        // #if _STAMP_ALG == STAMP_ALG_TIME_T
-        // TODO time.h implementation
-        // #else
+    void set(const Datime& dt) {
         unix = dt.getUnix();
-        // #endif
     }
 
     // установить время (год, месяц, день, час, минута, секунда)
     void set(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second) {
-        Datime dt(year, month, day, hour, minute, second);
-        set(dt);
+        set(Datime(year, month, day, hour, minute, second));
     }
 
     // установить время (год, месяц, день) или (час, минута, секунда)
     void set(uint16_t yh, uint16_t mm, uint16_t ds) {
-        Datime dt(yh, mm, ds);
-        set(dt);
+        set(Datime(yh, mm, ds));
     }
 
     // =========== ADD ============
@@ -131,52 +80,10 @@ class Stamp {
         return 1;
     }
 
-    // ============ EXPORT ============
-    // получить секунды с epoch
-    uint32_t toSeconds() {
-        return getUnix();
-    }
-
-    // получить минуты с epoch
-    uint32_t toMinutes() {
-        return getUnix() / 60ul;
-    }
-
-    // получить часы с epoch
-    uint32_t toHours() {
-        return getUnix() / 3600ul;
-    }
-
-    // получить сутки с epoch
-    uint32_t toDays() {
-        return getUnix() / 86400ul;
-    }
-
-    // получить секунды с начала текущих суток
-    uint32_t toDaySeconds() {
-        return (getUnix() + getStampZone() * 60l) % 86400;
-    }
-
     // =========== OVERLOAD ===========
     // получить время в секундах
-    virtual uint32_t getUnix() {
+    uint32_t getUnix() {
         return unix;
-    }
-
-    bool operator==(Stamp& dt) {
-        return getUnix() == dt.getUnix();
-    }
-    bool operator>(Stamp& dt) {
-        return getUnix() > dt.getUnix();
-    }
-    bool operator>=(Stamp& dt) {
-        return getUnix() >= dt.getUnix();
-    }
-    bool operator<(Stamp& dt) {
-        return getUnix() < dt.getUnix();
-    }
-    bool operator<=(Stamp& dt) {
-        return getUnix() <= dt.getUnix();
     }
 
     void operator+=(uint32_t t) {
@@ -184,12 +91,5 @@ class Stamp {
     }
     void operator-=(uint32_t t) {
         unix -= t;
-    }
-
-    operator uint32_t() {
-        return getUnix();
-    }
-    operator uint32_t*() {
-        return &unix;
     }
 };

@@ -1,84 +1,86 @@
 #pragma once
 #include <Arduino.h>
 
-#include "Stamp.h"
+// тикающий unix - встроенный таймер на 1 секунду
 
-class StampTicker : public Stamp {
+#include "core/StampCore.h"
+
+class StampTicker : public StampCore {
    public:
-    StampTicker() {}
-
-    // установить текущий unix, дополнительно миллисекунды синхронизации
-    StampTicker(uint32_t unix, uint16_t ms = 0) {
+    // установить unix и миллисекунды
+    StampTicker(uint32_t unix = 0, uint16_t ms = 0) {
         update(unix, ms);
     }
 
-    // установить текущий unix, дополнительно миллисекунды синхронизации
+    // установить unix и миллисекунды
     void update(uint32_t unix, uint16_t ms = 0) {
-        this->unix = _syncUnix = unix;
-        _updTime = millis() - ms;
-        _secTmr = _updTime;
-    }
-
-    // подключить функцию-обработчик срабатывания (вида void f())
-    void attach(void (*handler)()) {
-        _cb = *handler;
-    }
-
-    // отключить функцию-обработчик срабатывания
-    void detach() {
-        _cb = nullptr;
-    }
-
-    // тикер, вызывать в loop. Обновляет unix раз в секунду. Вернёт true каждую секунду с учётом мс синхронизации
-    bool tick() {
-        _ready = 0;
-        uint16_t timeLeft = (uint16_t)millis() - _secTmr;
-        if (timeLeft >= 1000) {
-            _secTmr += ((timeLeft >= 2 * 1000) ? (timeLeft / 1000) : 1) * 1000;
-            _ready = 1;
-            unix = calcUnix();
-            if (_cb) _cb();
+        if (unix) {
+            if (_unix) _diff = unix - _unix;
+            else _unix = unix;
+            _tmr = millis() - ms;
         }
-        return _ready;
-    }
-
-    // возвращает true каждую секунду
-    bool ready() {
-        return _ready;
     }
 
     // время синхронизировано
-    bool synced() {
-        return _syncUnix;
+    inline bool synced() {
+        return _unix;
+    }
+
+    // секундный флаг
+    inline bool newSecond() {
+        return _ready;
+    }
+
+    // тикер, вызывать в loop. Вернёт true на новой секунде
+    bool tick() {
+        if (_ready) _ready = 0;
+        if (_unix && (millis() - _tmr >= 1000 || _diff > 0)) {
+            if (_diff) {
+                if (_diff > 0) {
+                    _unix++;
+                    _diff--;
+                } else {
+                    _tmr += 1000;
+                    _diff++;
+                    return 0;
+                }
+            } else {
+                _unix++;
+                _tmr += 1000;
+            }
+            _ready = 1;
+            return 1;
+        }
+        return 0;
+    }
+
+    // newSecond
+    operator bool() {
+        return newSecond();
+    }
+
+    // получить текущий unix
+    uint32_t getUnix() {
+        return _unix;
     }
 
     // получить миллисекунды текущей секунды
     uint16_t ms() {
-        uint16_t m = (uint16_t)millis() - _secTmr;
-        return (m >= 1000) ? ((millis() - _updTime) % 1000ul) : m;  // если не вызывался тикер
+        return synced() ? ((millis() - _tmr) % 1000ul) : 0;
     }
 
-    // вычислить и получить текущий unix
-    uint32_t calcUnix() {
-        if (!synced()) return 0;
-        uint32_t ms = millis();
-        uint32_t diff = ms - _updTime;
-        if (diff > 86400000ul) {  // 24h
-            _syncUnix += diff / 1000ul;
-            _updTime = ms - diff % 1000ul;
-            diff = 0;
-        }
-        return _syncUnix + diff / 1000ul;
+    // получить миллисекунды с epoch
+    uint64_t unixMs() {
+        return synced() ? (getUnix() * 1000ull + ms()) : 0;
     }
 
-    operator uint32_t*() {
-        return &unix;
+    inline bool ready() __attribute__((deprecated)) {
+        return _ready;
     }
 
    private:
-    void (*_cb)() = nullptr;
-    uint32_t _syncUnix = 0;
-    uint32_t _updTime = 0;
-    uint16_t _secTmr = 0;
+    uint32_t _unix = 0;
+    uint32_t _tmr = 0;
+    int16_t _diff = 0;
     bool _ready = 0;
 };
