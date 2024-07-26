@@ -103,6 +103,11 @@ class Datime {
         return *this;
     }
 
+    // дата и время корректны
+    bool valid() {
+        return (year >= 1970) && (month >= 1 && month <= 12) && (day >= 1 && day <= 31) && (hour <= 23) && (minute <= 60) && (second <= 60);
+    }
+
     // ============= SET =============
     // установить время (год, месяц, день, час, минута, секунда)
     void set(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second) {
