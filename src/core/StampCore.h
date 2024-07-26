@@ -40,13 +40,6 @@ class StampCore {
         return get().toString();
     }
 
-    // ============ EXPORT DAY ============
-
-    // получить секунды с начала текущих суток (локальное время)
-    uint32_t toDaySeconds() {
-        return (getUnix() + getStampZone() * 60l) % 86400;
-    }
-
     // ============ EXPORT EPOCH ============
 
     // получить секунды с epoch
@@ -71,19 +64,24 @@ class StampCore {
 
     // ============ DATIME ============
 
+    // получить секунды с начала текущих суток (локальное время)
+    uint32_t toDaySeconds() {
+        return _localUnix() % 86400;
+    }
+
     // получить текущие секунды
     uint8_t second() {
-        return get().second;
+        return _localUnix() % 60ul;
     }
 
     // получить текущие минуты
     uint8_t minute() {
-        return get().minute;
+        return (_localUnix() / 60ul) % 60ul;
     }
 
     // получить текущие часы
     uint8_t hour() {
-        return get().hour;
+        return (_localUnix() / 3600ul) % 24ul;
     }
 
     // получить текущий день месяца
@@ -135,5 +133,10 @@ class StampCore {
     }
     bool operator<=(uint32_t u) {
         return getUnix() <= u;
+    }
+
+   private:
+    uint32_t _localUnix() {
+        return getUnix() + getStampZone() * 60l;
     }
 };
