@@ -2,6 +2,7 @@
 #include <Arduino.h>
 
 #include "core/StampCore.h"
+#include "core/buildStamp.h"
 
 class Stamp : public StampCore {
    public:

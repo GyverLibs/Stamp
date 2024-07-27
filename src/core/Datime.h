@@ -102,10 +102,18 @@ class Datime {
         set(unix);
         return *this;
     }
+    operator uint32_t() {
+        return getUnix();
+    }
 
     // дата и время корректны
     bool valid() {
-        return (year >= 1970) && (month >= 1 && month <= 12) && (day >= 1 && day <= 31) && (hour <= 23) && (minute <= 60) && (second <= 60);
+        return (year >= 2000) && (month >= 1 && month <= 12) && (day >= 1 && day <= 31) && (hour <= 23) && (minute <= 60) && (second <= 60);
+    }
+
+    // дата 01.01.2000
+    bool isY2K() {
+        return year == 2000 && month == 1 && day == 1;
     }
 
     // ============= SET =============
