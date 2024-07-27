@@ -39,5 +39,5 @@ uint8_t StampUtils::dateToWeekDay(uint8_t day, uint8_t month, uint16_t year) {
 }
 
 uint32_t StampUtils::dateToUnix(uint8_t day, uint8_t month, uint16_t year, uint8_t hour, uint8_t minute, uint8_t second, int16_t zone) {
-    return 946684800ul + (StampUtils::dateToDays2000(day, month, year)) * 86400ul + StampUtils::timeToSeconds(hour, minute, second) + zone * 60;
+    return 946684800ul + (StampUtils::dateToDays2000(day, month, year)) * 86400ul + StampUtils::timeToSeconds(hour, minute, second) - zone * 60;
 }
