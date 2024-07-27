@@ -40,6 +40,16 @@ int getStampZone();             // получить глобальную час�
 BUILD_STAMP_LOCAL   // локальное время компиляции (с часовой зоной компьютера)
 ```
 
+### DaySeconds
+Хранит время в секундах с начала текущих суток
+```cpp
+DaySeconds(uint8_t hour, uint8_t minute, uint8_t second);
+
+void set(uint8_t hour, uint8_t minute, uint8_t second);
+
+uint32_t seconds = 0;
+```
+
 ### Datime
 Хранит дату и время в отдельных переменных:
 ```cpp
@@ -76,7 +86,7 @@ void set(uint32_t unix);
 
 // =========== EXPORT ============
 // вывести в секунды с начала текущих суток
-uint32_t toDaySeconds();
+uint32_t daySeconds();
 
 // вывести в unix-секунды
 uint32_t getUnix();
@@ -108,15 +118,32 @@ bool parse(const char* s);
 bool parseHTTP(const char* s);
 
 // =========== COMPARE ===========
-bool operator==(const Datime& dt);
-bool operator!=(const Datime& dt);
-bool operator>(const Datime& dt);
-bool operator>=(const Datime& dt);
-bool operator<(const Datime& dt);
-bool operator<=(const Datime& dt);
+// одинаковое время
+bool equals(const Datime& dt);
 
+bool operator==(uint32_t u);
+bool operator!=(uint32_t u);
+bool operator>(uint32_t u);
+bool operator>=(uint32_t u);
+bool operator<(uint32_t u);
+bool operator<=(uint32_t u);
+
+bool operator==(DaySeconds ds);
+bool operator!=(DaySeconds ds);
+bool operator>(DaySeconds ds);
+bool operator>=(DaySeconds ds);
+bool operator<(DaySeconds ds);
+bool operator<=(DaySeconds ds);
+
+// =========== MISC ===========
 // високосный ли год
 bool isLeap();
+
+// дата и время корректны
+bool valid();
+
+// дата 01.01.2000
+bool isY2K();
 
 // день года как индекс массива от 0 до 365 независимо от високосного года. 29 февраля имеет индекс 59
 uint16_t dayIndex();
@@ -239,7 +266,7 @@ String toString(char div = ' ');
 // ============ EXPORT DAY ============
 
 // получить секунды с начала текущих суток (локальное время)
-uint32_t toDaySeconds();
+uint32_t daySeconds();
 
 // ============ EXPORT EPOCH ============
 
@@ -281,14 +308,19 @@ uint8_t weekDay();
 // получить текущий день года
 uint8_t yearDay();
 
-operator uint32_t();
-
 bool operator==(uint32_t u);
 bool operator!=(uint32_t u);
 bool operator>(uint32_t u);
 bool operator>=(uint32_t u);
 bool operator<(uint32_t u);
 bool operator<=(uint32_t u);
+
+bool operator==(DaySeconds ds);
+bool operator!=(DaySeconds ds);
+bool operator>(DaySeconds ds);
+bool operator>=(DaySeconds ds);
+bool operator<(DaySeconds ds);
+bool operator<=(DaySeconds ds);
 ```
 
 ### StampTicker
@@ -402,6 +434,7 @@ Serial.println(s.toString());
 ```cpp
 StampTicker st;
 
+
 void setup() {
     Serial.begin(115200);
     st.update(1695146928);
@@ -410,6 +443,9 @@ void setup() {
 void loop() {
     if (st.tick()) {
         Serial.println(st.toString());
+
+        DaySeconds ds(5, 5, 5);  // 5 часов, 5 минут, 5 секунд
+        if (st == ds);  // можно сравнивать напрямую
     }
 }
 ```

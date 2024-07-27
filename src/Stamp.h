@@ -1,6 +1,8 @@
 #pragma once
 #include <Arduino.h>
 
+#include "StampSync.h"
+#include "StampTicker.h"
 #include "core/StampCore.h"
 #include "core/buildStamp.h"
 

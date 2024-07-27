@@ -55,7 +55,7 @@ class StampTicker : public StampCore {
     }
 
     // newSecond
-    operator bool() {
+    explicit operator bool() {
         return newSecond();
     }
 

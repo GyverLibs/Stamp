@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 
+#include "DaySeconds.h"
 #include "StampUtils.h"
 #include "stamp_zone.h"
 
@@ -22,65 +23,27 @@ class Datime {
    public:
     // год
     uint16_t year = 2000;
-    /*union {
-        uint16_t year = 2000;
-        uint16_t y;
-      };*/
 
     // месяц (1.. 12)
     uint8_t month = 1;
-    /*union {
-        uint8_t month = 1;
-        uint8_t mon;
-        uint8_t mo;
-      };*/
 
     // день месяца (1.. 28-31)
     uint8_t day = 1;
-    /*union {
-        uint8_t day = 1;
-        uint8_t mday;
-        uint8_t d;
-      };*/
 
     // час (0.. 23)
     uint8_t hour = 0;
-    /*union {
-        uint8_t hour = 0;
-        uint8_t h;
-      };*/
 
     // минута (0.. 59)
     uint8_t minute = 0;
-    /*union {
-        uint8_t minute = 0;
-        uint8_t min;
-        uint8_t m;
-      };*/
 
     // секунда (0.. 59)
     uint8_t second = 0;
-    /*union {
-        uint8_t second = 0;
-        uint8_t sec;
-        uint8_t s;
-      };*/
 
     // день недели (1 пн.. 7 вс)
     uint8_t weekDay = 0;
-    /*union {
-        uint8_t weekDay = 0;
-        uint8_t wday;
-        uint8_t wd;
-      };*/
 
     // день года (1.. 365-366)
     uint16_t yearDay = 0;
-    /*union {
-        uint16_t yearDay = 0;
-        uint16_t yday;
-        uint16_t yd;
-      };*/
 
     // ========= CONSTRUCTOR =========
     Datime() {}
@@ -101,19 +64,6 @@ class Datime {
     Datime& operator=(uint32_t unix) {
         set(unix);
         return *this;
-    }
-    operator uint32_t() {
-        return getUnix();
-    }
-
-    // дата и время корректны
-    bool valid() {
-        return (year >= 2000) && (month >= 1 && month <= 12) && (day >= 1 && day <= 31) && (hour <= 23) && (minute <= 60) && (second <= 60);
-    }
-
-    // дата 01.01.2000
-    bool isY2K() {
-        return year == 2000 && month == 1 && day == 1;
     }
 
     // ============= SET =============
@@ -330,7 +280,7 @@ class Datime {
 
     // =========== EXPORT ============
     // вывести в секунды с начала текущих суток
-    uint32_t toDaySeconds() const {
+    uint32_t daySeconds() const {
         uint32_t sec = second;
         if (minute) sec += minute * 60;
         if (hour) sec += hour * 3600ul;
@@ -483,28 +433,66 @@ class Datime {
     }
 
     // =========== COMPARE ===========
-    bool operator==(const Datime& dt) const {
-        return _equals(dt);
+    bool operator==(uint32_t u) {
+        return getUnix() == u;
     }
-    bool operator!=(const Datime& dt) const {
-        return !_equals(dt);
+    bool operator!=(uint32_t u) {
+        return getUnix() != u;
     }
-    bool operator>(const Datime& dt) const {
-        return getUnix() > dt.getUnix();
+    bool operator>(uint32_t u) {
+        return getUnix() > u;
     }
-    bool operator>=(const Datime& dt) const {
-        return getUnix() >= dt.getUnix();
+    bool operator>=(uint32_t u) {
+        return getUnix() >= u;
     }
-    bool operator<(const Datime& dt) const {
-        return getUnix() < dt.getUnix();
+    bool operator<(uint32_t u) {
+        return getUnix() < u;
     }
-    bool operator<=(const Datime& dt) const {
-        return getUnix() <= dt.getUnix();
+    bool operator<=(uint32_t u) {
+        return getUnix() <= u;
+    }
+
+    bool operator==(DaySeconds ds) const {
+        return daySeconds() == ds.seconds;
+    }
+    bool operator!=(DaySeconds ds) const {
+        return daySeconds() != ds.seconds;
+    }
+    bool operator>(DaySeconds ds) const {
+        return daySeconds() > ds.seconds;
+    }
+    bool operator>=(DaySeconds ds) const {
+        return daySeconds() >= ds.seconds;
+    }
+    bool operator<(DaySeconds ds) const {
+        return daySeconds() < ds.seconds;
+    }
+    bool operator<=(DaySeconds ds) const {
+        return daySeconds() <= ds.seconds;
+    }
+
+    operator uint32_t() const {
+        return getUnix();
+    }
+
+    // одинаковое время
+    bool equals(const Datime& dt) const {
+        return (year == dt.year) && (month == dt.month) && (day == dt.day) && (hour == dt.hour) && (minute == dt.minute) && (second == dt.second);
     }
 
     // високосный ли год
     bool isLeap() const {
         return StampUtils::isLeap(year);
+    }
+
+    // дата и время корректны
+    bool valid() const {
+        return (year >= 2000) && (month >= 1 && month <= 12) && (day >= 1 && day <= 31) && (hour <= 23) && (minute <= 60) && (second <= 60);
+    }
+
+    // дата 01.01.2000
+    bool isY2K() const {
+        return year == 2000 && month == 1 && day == 1;
     }
 
     // день года как индекс массива от 0 до 365 независимо от високосного года. 29 февраля имеет индекс 59
@@ -637,9 +625,5 @@ class Datime {
             month = 1;
             yearDay = 1;
         }
-    }
-
-    bool _equals(const Datime& dt) const {
-        return (year == dt.year) && (month == dt.month) && (day == dt.day) && (hour == dt.hour) && (minute == dt.minute) && (second == dt.second);
     }
 };

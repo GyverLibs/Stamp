@@ -2,6 +2,7 @@
 #include <Arduino.h>
 
 #include "Datime.h"
+#include "DaySeconds.h"
 
 class StampCore {
    public:
@@ -65,7 +66,7 @@ class StampCore {
     // ============ DATIME ============
 
     // получить секунды с начала текущих суток (локальное время)
-    uint32_t toDaySeconds() {
+    uint32_t daySeconds() {
         return _localUnix() % 86400;
     }
 
@@ -133,6 +134,25 @@ class StampCore {
     }
     bool operator<=(uint32_t u) {
         return getUnix() <= u;
+    }
+
+    bool operator==(DaySeconds ds) {
+        return daySeconds() == ds.seconds;
+    }
+    bool operator!=(DaySeconds ds) {
+        return daySeconds() != ds.seconds;
+    }
+    bool operator>(DaySeconds ds) {
+        return daySeconds() > ds.seconds;
+    }
+    bool operator>=(DaySeconds ds) {
+        return daySeconds() >= ds.seconds;
+    }
+    bool operator<(DaySeconds ds) {
+        return daySeconds() < ds.seconds;
+    }
+    bool operator<=(DaySeconds ds) {
+        return daySeconds() <= ds.seconds;
     }
 
    private:
