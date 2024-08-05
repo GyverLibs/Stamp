@@ -333,11 +333,20 @@ StampTicker(uint32_t unix = 0, uint16_t ms = 0);
 // установить unix и миллисекунды
 void update(uint32_t unix, uint16_t ms = 0);
 
+// пропустить отставшие секунды (вызывать после update)
+void skipTicks();
+
 // время синхронизировано
 bool synced();
 
 // секундный флаг
 bool newSecond();
+
+// подключить функцию-обработчик новой секунды (вида void f())
+void attachSecond(SecondHandler handler);
+
+// отключить функцию-обработчик новой секунды
+void detachSecond();
 
 // тикер, вызывать в loop. Вернёт true на новой секунде
 bool tick();

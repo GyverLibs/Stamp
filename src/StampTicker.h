@@ -6,6 +6,12 @@
 #include "core/StampCore.h"
 
 class StampTicker : public StampCore {
+#ifdef __AVR__
+    typedef void (*SecondHandler)();
+#else
+    typedef std::function<void()> SecondHandler;
+#endif
+
    public:
     // установить unix и миллисекунды
     StampTicker(uint32_t unix = 0, uint16_t ms = 0) {
@@ -18,6 +24,14 @@ class StampTicker : public StampCore {
             if (_unix) _diff = unix - _unix;
             else _unix = unix;
             _tmr = millis() - ms;
+        }
+    }
+
+    // пропустить отставшие секунды (вызывать после update)
+    void skipTicks() {
+        if (_diff) {
+            _unix += _diff;
+            _diff = 0;
         }
     }
 
@@ -49,9 +63,20 @@ class StampTicker : public StampCore {
                 _tmr += 1000;
             }
             _ready = 1;
+            if (_cb) _cb();
             return 1;
         }
         return 0;
+    }
+
+    // подключить функцию-обработчик новой секунды (вида void f())
+    void attachSecond(SecondHandler handler) {
+        _cb = handler;
+    }
+
+    // отключить функцию-обработчик новой секунды
+    void detachSecond() {
+        _cb = nullptr;
     }
 
     // newSecond
@@ -83,4 +108,5 @@ class StampTicker : public StampCore {
     uint32_t _tmr = 0;
     int16_t _diff = 0;
     bool _ready = 0;
+    SecondHandler _cb = nullptr;
 };

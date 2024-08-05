@@ -73,6 +73,9 @@ detach	KEYWORD2
 tick	KEYWORD2
 ready	KEYWORD2
 calcUnix	KEYWORD2
+skipTicks	KEYWORD2
+attachSecond	KEYWORD2
+detachSecond	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

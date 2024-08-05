@@ -12,5 +12,24 @@ class DaySeconds {
         seconds = hour * 3600ul + minute * 60 + second;
     }
 
+    bool operator==(uint32_t u) {
+        return seconds == u;
+    }
+    bool operator!=(uint32_t u) {
+        return seconds != u;
+    }
+    bool operator>(uint32_t u) {
+        return seconds > u;
+    }
+    bool operator>=(uint32_t u) {
+        return seconds >= u;
+    }
+    bool operator<(uint32_t u) {
+        return seconds < u;
+    }
+    bool operator<=(uint32_t u) {
+        return seconds <= u;
+    }
+
     uint32_t seconds = 0;
 };
