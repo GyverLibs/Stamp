@@ -40,10 +40,10 @@ class Datime {
     uint8_t second = 0;
 
     // день недели (1 пн.. 7 вс)
-    uint8_t weekDay = 0;
+    uint8_t weekDay = 1;
 
     // день года (1.. 365-366)
-    uint16_t yearDay = 0;
+    uint16_t yearDay = 1;
 
     // ========= CONSTRUCTOR =========
     Datime() {}
