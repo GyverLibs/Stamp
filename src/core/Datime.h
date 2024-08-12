@@ -94,6 +94,7 @@ class Datime {
 
     // установить из unix времени и глобального часового пояса setStampZone
     void set(uint32_t unix) {
+        if (!unix) return;
         unix += getStampZone() * 60l;
 
 #if _UNIX_ALG == UNIX_ALG_0
