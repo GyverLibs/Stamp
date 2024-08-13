@@ -26,6 +26,11 @@ class StampSync : public StampCore {
         return _unix;
     }
 
+    // время синхронизировано
+    explicit operator bool() {
+        return synced();
+    }
+
     // получить текущий unix
     uint32_t getUnix() {
         if (!synced()) return 0;

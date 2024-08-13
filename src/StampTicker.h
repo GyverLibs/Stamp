@@ -40,6 +40,11 @@ class StampTicker : public StampCore {
         return _unix;
     }
 
+    // время синхронизировано
+    explicit operator bool() {
+        return synced();
+    }
+
     // секундный флаг
     inline bool newSecond() {
         return _ready;
@@ -77,11 +82,6 @@ class StampTicker : public StampCore {
     // отключить функцию-обработчик новой секунды
     void detachSecond() {
         _cb = nullptr;
-    }
-
-    // newSecond
-    explicit operator bool() {
-        return newSecond();
     }
 
     // получить текущий unix

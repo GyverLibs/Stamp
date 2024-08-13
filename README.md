@@ -339,6 +339,9 @@ void skipTicks();
 // время синхронизировано
 bool synced();
 
+// время синхронизировано
+operator bool();
+
 // секундный флаг
 bool newSecond();
 
@@ -350,9 +353,6 @@ void detachSecond();
 
 // тикер, вызывать в loop. Вернёт true на новой секунде
 bool tick();
-
-// newSecond
-operator bool();
 
 // получить текущий unix
 uint32_t getUnix();
@@ -375,6 +375,9 @@ void update(uint32_t unix, uint16_t ms = 0);
 
 // время синхронизировано
 bool synced();
+
+// время синхронизировано
+operator bool();
 
 // получить текущий unix
 uint32_t getUnix();
@@ -450,11 +453,13 @@ void setup() {
 }
 
 void loop() {
+    // каждую секунду
     if (st.tick()) {
         Serial.println(st.toString());
-
+        
+        // проверка совпадения времени ("будильник")
         DaySeconds ds(5, 5, 5);  // 5 часов, 5 минут, 5 секунд
-        if (st == ds);  // можно сравнивать напрямую
+        if (st == ds) {}  // можно сравнивать напрямую
     }
 }
 ```
