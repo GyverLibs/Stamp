@@ -488,7 +488,7 @@ class Datime {
 
     // дата и время корректны
     bool valid() const {
-        return (year >= 2000) && (month >= 1 && month <= 12) && (day >= 1 && day <= 31) && (hour <= 23) && (minute <= 60) && (second <= 60);
+        return (year >= 2000) && (month >= 1 && month <= 12) && (day >= 1 && day <= 31) && (hour <= 23) && (minute <= 59) && (second <= 59);
     }
 
     // дата 01.01.2000
