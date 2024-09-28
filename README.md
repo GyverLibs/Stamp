@@ -330,8 +330,13 @@ bool operator<=(DaySeconds ds);
 // установить unix и миллисекунды
 StampTicker(uint32_t unix = 0, uint16_t ms = 0);
 
+StampTicker(const StampTicker& ticker);
+
 // установить unix и миллисекунды
 void update(uint32_t unix, uint16_t ms = 0);
+
+// обновить из другого тикера
+void update(const StampTicker& ticker);
 
 // пропустить отставшие секунды (вызывать после update)
 void skipTicks();

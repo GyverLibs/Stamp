@@ -17,6 +17,9 @@ class StampTicker : public StampCore {
     StampTicker(uint32_t unix = 0, uint16_t ms = 0) {
         update(unix, ms);
     }
+    StampTicker(const StampTicker& ticker) {
+        update(ticker);
+    }
 
     // установить unix и миллисекунды
     void update(uint32_t unix, uint16_t ms = 0, bool skipTicks = false) {
@@ -29,6 +32,13 @@ class StampTicker : public StampCore {
             }
             _tmr = millis() - ms;
         }
+    }
+
+    // обновить из другого тикера
+    void update(const StampTicker& ticker) {
+        _unix = ticker._unix;
+        _tmr = ticker._tmr;
+        _diff = ticker._diff;
     }
 
     // пропустить отставшие секунды (вызывать после update)
