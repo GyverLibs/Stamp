@@ -92,16 +92,22 @@ uint32_t daySeconds();
 uint32_t getUnix();
 
 // ========== TO STRING ==========
-// вывести дату в формате "dd.mm.yyyy". Вернёт указатель на конец строки
+// вывести дату в формате "dd.mm.yyyy" [11]. Вернёт указатель на конец строки
 char* dateToChar(char* buf);
+
+// вывести дату в формате "dd.mm.yyyy"
 String dateToString();
 
-// вывести время в формате "hh:mm:ss". Вернёт указатель на конец строки
+// вывести время в формате "hh:mm:ss" [9]. Вернёт указатель на конец строки
 char* timeToChar(char* buf);
+
+// вывести время в формате "hh:mm:ss"
 String timeToString();
 
-// вывести в формате dd.mm.yyyy hh:mm:ss. Вернёт указатель на конец строки
+// вывести в формате "dd.mm.yyyy hh:mm:ss" [20]. Вернёт указатель на конец строки
 char* toChar(char* buf, char div = ' ');
+
+// вывести в формате "dd.mm.yyyy hh:mm:ss"
 String toString(char div = ' ');
 
 // ========== PARSE ==========
@@ -474,6 +480,7 @@ void loop() {
 - v1.0
 - v1.1 - добавлено много новых инструментов и возможностей
 - v1.2.2 - оптимизация, рефакторинг, улучшен StampTicker
+- 1.3.9 - исправлен критический баг в выводе toString/dateToString/timeToString
 
 <a id="install"></a>
 ## Установка

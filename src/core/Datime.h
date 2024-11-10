@@ -294,54 +294,51 @@ class Datime {
     }
 
     // ========== TO STRING ==========
-    // вывести дату в формате "dd.mm.yyyy". Вернёт указатель на конец строки
+    // вывести дату в формате "dd.mm.yyyy" [11]. Вернёт указатель на конец строки
     char* dateToChar(char* buf) const {
-        buf[0] = day / 10 + '0';
-        buf[1] = day % 10 + '0';
+        _btoa(day, buf + 0);
         buf[2] = '.';
-        buf[3] = month / 10 + '0';
-        buf[4] = month % 10 + '0';
+        _btoa(month, buf + 3);
         buf[5] = '.';
+        if (year > 9999) year = 9999;
         itoa(year, buf + 6, DEC);
         return buf + 10;
     }
 
     // вывести дату в формате "dd.mm.yyyy"
     String dateToString() const {
-        char buf[10];
+        char buf[11];
         dateToChar(buf);
         return buf;
     }
 
-    // вывести время в формате "hh:mm:ss". Вернёт указатель на конец строки
+    // вывести время в формате "hh:mm:ss" [9]. Вернёт указатель на конец строки
     char* timeToChar(char* buf) const {
-        buf[0] = hour / 10 + '0';
-        buf[1] = hour % 10 + '0';
+        _btoa(hour, buf + 0);
         buf[2] = ':';
-        buf[3] = minute / 10 + '0';
-        buf[4] = minute % 10 + '0';
+        _btoa(minute, buf + 3);
         buf[5] = ':';
-        buf[6] = second / 10 + '0';
-        buf[7] = second % 10 + '0';
+        _btoa(second, buf + 6);
         buf[8] = 0;
         return buf + 8;
     }
 
     // вывести время в формате "hh:mm:ss"
     String timeToString() const {
-        char buf[8];
+        char buf[9];
         timeToChar(buf);
         return buf;
     }
 
-    // вывести в формате dd.mm.yyyy hh:mm:ss. Вернёт указатель на конец строки
+    // вывести в формате "dd.mm.yyyy hh:mm:ss" [20]. Вернёт указатель на конец строки
     char* toChar(char* buf, char div = ' ') const {
-        char* s = buf;
-        s = dateToChar(s);
-        s[0] = div;
-        s = timeToChar(s + 1);
-        return s;
+        dateToChar(buf);
+        buf[10] = div;
+        timeToChar(buf + 11);
+        return buf + 19;
     }
+
+    // вывести в формате "dd.mm.yyyy hh:mm:ss"
     String toString(char div = ' ') const {
         char buf[20];
         toChar(buf, div);
@@ -626,5 +623,11 @@ class Datime {
             month = 1;
             yearDay = 1;
         }
+    }
+
+    void _btoa(uint8_t v, char* str) const {
+        uint8_t d = v / 10;
+        str[0] = d + '0';
+        str[1] = v - d * 10 + '0';
     }
 };
