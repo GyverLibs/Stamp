@@ -300,8 +300,7 @@ class Datime {
         buf[2] = '.';
         _btoa(month, buf + 3);
         buf[5] = '.';
-        if (year > 9999) year = 9999;
-        itoa(year, buf + 6, DEC);
+        itoa(year > 9999 ? 9999 : year, buf + 6, DEC);
         return buf + 10;
     }
 
