@@ -24,11 +24,11 @@ class StampTicker : public StampCore {
     // установить unix и миллисекунды
     void update(uint32_t unix, uint16_t ms = 0, bool skipTicks = false) {
         if (unix) {
-            if (_unix && skipTicks) {
-                _diff = unix - _unix;
-            } else {
+            if (!_unix || skipTicks) {
                 _unix = unix;
                 _diff = 0;
+            } else {
+                _diff = unix - _unix;
             }
             _tmr = millis() - ms;
         }
