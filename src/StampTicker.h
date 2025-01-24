@@ -34,11 +34,9 @@ class StampTicker : public StampCore {
         }
     }
 
-    // обновить из другого тикера
-    void update(const StampTicker& ticker) {
-        _unix = ticker._unix;
-        _tmr = ticker._tmr;
-        _diff = ticker._diff;
+    // синхронизировать с другим тикером
+    void update(const StampTicker& ticker, bool skipTicks = false) {
+        update(ticker.getUnix(), ticker.ms(), skipTicks);
     }
 
     // пропустить отставшие секунды (вызывать после update)
