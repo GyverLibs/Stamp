@@ -17,7 +17,7 @@ class StampTicker : public StampCore {
     StampTicker(uint32_t unix = 0, uint16_t ms = 0) {
         update(unix, ms);
     }
-    StampTicker(const StampTicker& ticker) {
+    StampTicker(StampTicker& ticker) {
         update(ticker);
     }
 
@@ -35,7 +35,7 @@ class StampTicker : public StampCore {
     }
 
     // синхронизировать с другим тикером
-    void update(const StampTicker& ticker, bool skipTicks = false) {
+    void update(StampTicker& ticker, bool skipTicks = false) {
         update(ticker.getUnix(), ticker.ms(), skipTicks);
     }
 
