@@ -1,12 +1,9 @@
 #pragma once
 #include <Arduino.h>
 
-#include "StampSync.h"
-#include "StampTicker.h"
-#include "core/StampCore.h"
-#include "core/buildStamp.h"
+#include "./core/StampConvert.h"
 
-class Stamp : public StampCore {
+class Stamp : public StampConvert {
    public:
     uint32_t unix = 0;
 
@@ -17,7 +14,7 @@ class Stamp : public StampCore {
         parse(str);
     }
     Stamp(uint32_t unix) {
-        this->unix = unix;
+        Stamp::unix = unix;
     }
     Stamp(const Datime& dt) {
         set(dt);
@@ -85,14 +82,7 @@ class Stamp : public StampCore {
 
     // =========== OVERLOAD ===========
     // получить время в секундах
-    uint32_t getUnix() {
+    uint32_t getUnix() override {
         return unix;
-    }
-
-    void operator+=(uint32_t t) {
-        unix += t;
-    }
-    void operator-=(uint32_t t) {
-        unix -= t;
     }
 };

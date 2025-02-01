@@ -7,7 +7,7 @@ void setup() {
     Stamp s(2023, 5, 8, 16, 26, 0);
     Serial.println(s.toString());
 
-    Datime d = s.get();
+    Datime d = s.now();
     Serial.println(d.year);
     Serial.println(d.month);
     Serial.println(d.day);

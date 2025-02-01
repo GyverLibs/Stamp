@@ -1,9 +1,10 @@
 #pragma once
-#include <Arduino.h>
+#include <inttypes.h>
 
 class DaySeconds {
    public:
     DaySeconds() {}
+    DaySeconds(uint32_t seconds) : seconds(seconds) {}
     DaySeconds(uint8_t hour, uint8_t minute, uint8_t second) {
         set(hour, minute, second);
     }

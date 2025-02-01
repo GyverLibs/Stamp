@@ -4,11 +4,11 @@
 // Синхронизатор Unix, getUnix() выдаёт актуальное время на базе установленного
 // в update + millis() с момента обновления
 
-#include "core/StampCore.h"
+#include "./core/StampConvert.h"
 
 #define STAMP_SYNC_LOOP_PRD (7ul * 24 * 60 * 60 * 1000)
 
-class StampSync : public StampCore {
+class StampSync : public StampConvert {
    public:
     // установить unix и миллисекунды
     StampSync(uint32_t unix = 0, uint16_t ms = 0) {

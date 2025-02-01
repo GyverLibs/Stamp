@@ -1,9 +1,9 @@
 #pragma once
 #include <Arduino.h>
 
+#include "./core/StampUtils.h"
+#include "./core/stamp_zone.h"
 #include "DaySeconds.h"
-#include "StampUtils.h"
-#include "stamp_zone.h"
 
 #define UNIX_ALG_0 0       // ~402us / ~94B Flash (AVR)
 #define UNIX_ALG_1 1       // ~298us / ~138B Flash (AVR)
@@ -47,7 +47,7 @@ class Datime {
 
     // ========= CONSTRUCTOR =========
     Datime() {}
-    Datime(const Datime& dat) = default;
+    // Datime(const Datime& dat) = default;
     Datime(const char* str) {
         parse(str);
     }
@@ -61,20 +61,20 @@ class Datime {
         set(yh, mm, ds);
     }
 
-    Datime& operator=(uint32_t unix) {
-        set(unix);
-        return *this;
-    }
+    // Datime& operator=(uint32_t unix) {
+    //     set(unix);
+    //     return *this;
+    // }
 
     // ============= SET =============
     // установить время (год, месяц, день, час, минута, секунда)
     void set(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second) {
-        this->year = year;
-        this->month = month;
-        this->day = day;
-        this->hour = hour;
-        this->minute = minute;
-        this->second = second;
+        Datime::year = year;
+        Datime::month = month;
+        Datime::day = day;
+        Datime::hour = hour;
+        Datime::minute = minute;
+        Datime::second = second;
         updateDays();
     }
 
@@ -98,13 +98,13 @@ class Datime {
         unix += getStampZone() * 60l;
 
 #if _UNIX_ALG == UNIX_ALG_0
-        this->second = unix % 60ul;
+        Datime::second = unix % 60ul;
         unix /= 60ul;
-        this->minute = unix % 60ul;
+        Datime::minute = unix % 60ul;
         unix /= 60ul;
-        this->hour = unix % 24ul;
+        Datime::hour = unix % 24ul;
         unix /= 24ul;
-        this->weekDay = (unix + 3) % 7 + 1;
+        Datime::weekDay = (unix + 3) % 7 + 1;
         uint32_t z = unix + 719468;
         uint8_t era = z / 146097ul;
         uint16_t doe = z - era * 146097ul;
@@ -112,11 +112,11 @@ class Datime {
         uint16_t y = yoe + era * 400;
         uint16_t doy = doe - (yoe * 365 + yoe / 4 - yoe / 100);
         uint16_t mp = (doy * 5 + 2) / 153;
-        this->day = doy - (mp * 153 + 2) / 5 + 1;
-        this->month = mp + (mp < 10 ? 3 : -9);
-        y += (this->month <= 2);
-        this->year = y;
-        this->yearDay = StampUtils::dateToYearDay(this->day, this->month, this->year);
+        Datime::day = doy - (mp * 153 + 2) / 5 + 1;
+        Datime::month = mp + (mp < 10 ? 3 : -9);
+        y += (Datime::month <= 2);
+        Datime::year = y;
+        Datime::yearDay = StampUtils::dateToYearDay(Datime::day, Datime::month, Datime::year);
 
 #elif _UNIX_ALG == UNIX_ALG_1
         int32_t days, rem;
@@ -129,13 +129,13 @@ class Datime {
             days--;
         }
 
-        this->hour = rem / 3600ul;
+        Datime::hour = rem / 3600ul;
         rem %= 3600ul;
-        this->minute = rem / 60ul;
-        this->second = rem % 60ul;
+        Datime::minute = rem / 60ul;
+        Datime::second = rem % 60ul;
 
-        if ((this->weekDay = ((3 + days) % 7)) < 0) this->weekDay += 7;
-        if (!this->weekDay) this->weekDay = 7;
+        if ((Datime::weekDay = ((3 + days) % 7)) < 0) Datime::weekDay += 7;
+        if (!Datime::weekDay) Datime::weekDay = 7;
 
         years400 = days / 146097L;
         days -= years400 * 146097L;
@@ -152,26 +152,26 @@ class Datime {
         remainingyears = days / 365L;
         if (remainingyears == 4) remainingyears--;
         days -= remainingyears * 365L;
-        this->year = 2000 + years400 * 400 + years100 * 100 + years4 * 4 + remainingyears;
+        Datime::year = 2000 + years400 * 400 + years100 * 100 + years4 * 4 + remainingyears;
         bool yearleap = remainingyears == 0 && (years4 != 0 || years100 == 0);
 
-        this->yearDay = days + 31 + 28 + yearleap;
-        if (this->yearDay >= 365u + yearleap) {
-            this->yearDay -= 365u + yearleap;
-            this->year++;
+        Datime::yearDay = days + 31 + 28 + yearleap;
+        if (Datime::yearDay >= 365u + yearleap) {
+            Datime::yearDay -= 365u + yearleap;
+            Datime::year++;
         }
-        this->yearDay++;
+        Datime::yearDay++;
 
-        this->month = 2;
+        Datime::month = 2;
         while (1) {
-            uint8_t dm = StampUtils::daysInMonth(this->month + 1);  // from 0. Feb 28 here
-            if (this->month == 1) dm++;                             // 1 Feb
+            uint8_t dm = StampUtils::daysInMonth(Datime::month + 1);  // from 0. Feb 28 here
+            if (Datime::month == 1) dm++;                             // 1 Feb
             if (days < dm) break;
             days -= dm;
-            if (++this->month >= 12) this->month = 0;
+            if (++Datime::month >= 12) Datime::month = 0;
         }
-        this->month++;
-        this->day = days + 1;
+        Datime::month++;
+        Datime::day = days + 1;
 
 #elif _UNIX_ALG == UNIX_ALG_2
         int32_t fract;
@@ -185,15 +185,15 @@ class Datime {
         fract = unix - days * 86400UL;  // 86400
 
         lresult = ldiv(fract, 60L);  // 86400
-        this->second = lresult.rem;
+        Datime::second = lresult.rem;
         result = div((int)lresult.quot, 60);  // 1440
-        this->minute = result.rem;
-        this->hour = result.quot;
+        Datime::minute = result.rem;
+        Datime::hour = result.quot;
 
         n = days + 6;
         n %= 7;
-        this->weekDay = n;
-        if (!this->weekDay) this->weekDay = 7;
+        Datime::weekDay = n;
+        if (!Datime::weekDay) Datime::weekDay = 7;
 
         lresult = ldiv((long)days, 36525L);  // 38753+
         years = 100 * lresult.quot;
@@ -213,69 +213,69 @@ class Datime {
             years += result.quot;
             days = result.rem;  // <- 365
         }
-        this->year = 100 + years + 1900;
-        this->yearDay = days + 1;
+        Datime::year = 100 + years + 1900;
+        Datime::yearDay = days + 1;
 
         n = 59 + leapyear;
         if (days < n) {
             result = div(days, 31);  // 1461
-            this->month = result.quot;
-            this->day = result.rem;
+            Datime::month = result.quot;
+            Datime::day = result.rem;
         } else {
             days -= n;
             result = div(days, 153);  // 1461
-            this->month = 2 + result.quot * 5;
+            Datime::month = 2 + result.quot * 5;
             result = div(result.rem, 61);  // 153
-            this->month += result.quot * 2;
+            Datime::month += result.quot * 2;
             result = div(result.rem, 31);  // 61
-            this->month += result.quot;
-            this->day = result.rem;
+            Datime::month += result.quot;
+            Datime::day = result.rem;
         }
 
-        this->day++;
-        this->month++;
+        Datime::day++;
+        Datime::month++;
 
 #elif _UNIX_ALG == UNIX_ALG_3
         unix -= 946684800;
-        this->second = unix % 60ul;
+        Datime::second = unix % 60ul;
         unix /= 60ul;
-        this->minute = unix % 60ul;
+        Datime::minute = unix % 60ul;
         unix /= 60ul;
-        this->hour = unix % 24ul;
+        Datime::hour = unix % 24ul;
 
         uint16_t days = unix / 24ul;
-        this->weekDay = (days + 5) % 7 + 1;
+        Datime::weekDay = (days + 5) % 7 + 1;
 
         bool leap = 0;
-        for (this->year = 0;; this->year++) {
-            leap = !(this->year & 3);
+        for (Datime::year = 0;; Datime::year++) {
+            leap = !(Datime::year & 3);
             if (days < 365u + leap) break;
             days -= 365u + leap;
         }
-        this->year += 2000;
-        this->yearDay = days + 1;
+        Datime::year += 2000;
+        Datime::yearDay = days + 1;
 
-        for (this->month = 1; this->month < 12; this->month++) {
-            uint8_t dm = StampUtils::daysInMonth(this->month);
-            if (leap && this->month == 2) dm++;
+        for (Datime::month = 1; Datime::month < 12; Datime::month++) {
+            uint8_t dm = StampUtils::daysInMonth(Datime::month);
+            if (leap && Datime::month == 2) dm++;
             if (days < dm) break;
             days -= dm;
         }
-        this->day = days + 1;
+        Datime::day = days + 1;
 
 #elif _UNIX_ALG == UNIX_ALG_TIME_T
         time_t t = unix - 946684800;
         tm tt;
         gmtime_r(&t, &tt);
-        this->year = tt.tm_year + 1900;
-        this->month = tt.tm_mon + 1;
-        this->day = tt.tm_mday;
-        this->hour = tt.tm_hour;
-        this->minute = tt.tm_min;
-        this->second = tt.tm_sec;
-        this->weekDay = tt.tm_wday;
-        if (!this->weekDay) this->weekDay = 7;
-        this->yearDay = tt.tm_yday + 1;
+        Datime::year = tt.tm_year + 1900;
+        Datime::month = tt.tm_mon + 1;
+        Datime::day = tt.tm_mday;
+        Datime::hour = tt.tm_hour;
+        Datime::minute = tt.tm_min;
+        Datime::second = tt.tm_sec;
+        Datime::weekDay = tt.tm_wday;
+        if (!Datime::weekDay) Datime::weekDay = 7;
+        Datime::yearDay = tt.tm_yday + 1;
 #endif
     }
 
@@ -300,7 +300,7 @@ class Datime {
         buf[2] = '.';
         _btoa(month, buf + 3);
         buf[5] = '.';
-        itoa(year > 9999 ? 9999 : year, buf + 6, DEC);
+        itoa(min(year, (uint16_t)9999), buf + 6, DEC);
         return buf + 10;
     }
 
@@ -391,36 +391,20 @@ class Datime {
     bool parseHTTP(const char* s) {
         char* comma = strchr(s, ',');
         if (!comma) return 0;
+
         s = comma + 2;
         day = atoi(s);
         month = 0;
         switch (s[3]) {
-            case 'J':
-                month = (s[4] == 'a') ? 1 : ((s[5] == 'n') ? 6 : 7);
-                break;
-            case 'F':
-                month = 2;
-                break;
-            case 'A':
-                month = (s[5] == 'r') ? 4 : 8;
-                break;
-            case 'M':
-                month = (s[5] == 'r') ? 3 : 5;
-                break;
-            case 'S':
-                month = 9;
-                break;
-            case 'O':
-                month = 10;
-                break;
-            case 'N':
-                month = 11;
-                break;
-            case 'D':
-                month = 12;
-                break;
-            default:
-                return 0;
+            case 'J': month = (s[4] == 'a') ? 1 : ((s[5] == 'n') ? 6 : 7); break;
+            case 'F': month = 2; break;
+            case 'A': month = (s[5] == 'r') ? 4 : 8; break;
+            case 'M': month = (s[5] == 'r') ? 3 : 5; break;
+            case 'S': month = 9; break;
+            case 'O': month = 10; break;
+            case 'N': month = 11; break;
+            case 'D': month = 12; break;
+            default: return 0;
         }
         year = atoi(s + 7);
         hour = atoi(s + 12);
@@ -430,6 +414,25 @@ class Datime {
     }
 
     // =========== COMPARE ===========
+    bool operator==(const Datime& dt) {
+        return getUnix() == dt.getUnix();
+    }
+    bool operator!=(const Datime& dt) {
+        return getUnix() != dt.getUnix();
+    }
+    bool operator>(const Datime& dt) {
+        return getUnix() > dt.getUnix();
+    }
+    bool operator>=(const Datime& dt) {
+        return getUnix() >= dt.getUnix();
+    }
+    bool operator<(const Datime& dt) {
+        return getUnix() < dt.getUnix();
+    }
+    bool operator<=(const Datime& dt) {
+        return getUnix() <= dt.getUnix();
+    }
+
     bool operator==(uint32_t u) {
         return getUnix() == u;
     }
@@ -449,32 +452,28 @@ class Datime {
         return getUnix() <= u;
     }
 
-    bool operator==(DaySeconds ds) const {
+    bool operator==(const DaySeconds& ds) const {
         return daySeconds() == ds.seconds;
     }
-    bool operator!=(DaySeconds ds) const {
+    bool operator!=(const DaySeconds& ds) const {
         return daySeconds() != ds.seconds;
     }
-    bool operator>(DaySeconds ds) const {
+    bool operator>(const DaySeconds& ds) const {
         return daySeconds() > ds.seconds;
     }
-    bool operator>=(DaySeconds ds) const {
+    bool operator>=(const DaySeconds& ds) const {
         return daySeconds() >= ds.seconds;
     }
-    bool operator<(DaySeconds ds) const {
+    bool operator<(const DaySeconds& ds) const {
         return daySeconds() < ds.seconds;
     }
-    bool operator<=(DaySeconds ds) const {
+    bool operator<=(const DaySeconds& ds) const {
         return daySeconds() <= ds.seconds;
-    }
-
-    operator uint32_t() const {
-        return getUnix();
     }
 
     // одинаковое время
     bool equals(const Datime& dt) const {
-        return (year == dt.year) && (month == dt.month) && (day == dt.day) && (hour == dt.hour) && (minute == dt.minute) && (second == dt.second);
+        return !memcmp(&dt, this, sizeof(Datime));
     }
 
     // високосный ли год

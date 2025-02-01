@@ -3,9 +3,9 @@
 
 // тикающий unix - встроенный таймер на 1 секунду
 
-#include "core/StampCore.h"
+#include "./core/StampConvert.h"
 
-class StampTicker : public StampCore {
+class StampTicker : public StampConvert {
 #ifdef __AVR__
     typedef void (*SecondHandler)();
 #else

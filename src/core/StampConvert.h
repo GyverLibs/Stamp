@@ -1,44 +1,46 @@
 #pragma once
 #include <Arduino.h>
 
-#include "Datime.h"
-#include "DaySeconds.h"
+#include "../Datime.h"
+#include "../DaySeconds.h"
 
-class StampCore {
+class StampConvert {
    public:
+    virtual uint32_t getUnix() = 0;
+
     // =========== GET TIME ===========
-    // экспортировать в Datime
-    inline Datime get() {
+    // экспортировать в локальное время Datime
+    Datime now() {
         return getUnix();
     }
 
-    // экспортировать в переменную типа Datime
-    void get(Datime& dt) {
-        dt = getUnix();
+    operator Datime() {
+        return getUnix();
     }
 
     // ============ TO STRING ============
     // вывести дату в формате "dd.mm.yyyy"
     char* dateToChar(char* buf) {
-        return get().dateToChar(buf);
+        return now().dateToChar(buf);
     }
     String dateToString() {
-        return get().dateToString();
+        return now().dateToString();
     }
 
     // вывести время в формате "hh:mm:ss"
     char* timeToChar(char* buf) {
-        return get().timeToChar(buf);
+        return now().timeToChar(buf);
     }
     String timeToString() {
-        return get().timeToString();
+        return now().timeToString();
     }
 
+    // вывести время и дату в формате "dd.mm.yyyy hh:mm:ss"
     char* toChar(char* buf, char div = ' ') {
-        return get().toChar(buf, div);
+        return now().toChar(buf, div);
     }
     String toString(char div = ' ') {
-        return get().toString();
+        return now().toString();
     }
 
     // ============ EXPORT EPOCH ============
@@ -87,34 +89,66 @@ class StampCore {
 
     // получить текущий день месяца
     uint8_t day() {
-        return get().day;
+        return now().day;
     }
 
     // получить текущий месяц
     uint8_t month() {
-        return get().month;
+        return now().month;
     }
 
     // получить текущий год
     uint16_t year() {
-        return get().year;
+        return now().year;
     }
 
     // получить текущий день недели
     uint8_t weekDay() {
-        return get().weekDay;
+        return now().weekDay;
     }
 
     // получить текущий день года
     uint8_t yearDay() {
-        return get().yearDay;
+        return now().yearDay;
     }
 
     // =========== OVERLOAD ===========
-    virtual uint32_t getUnix() = 0;
-
-    operator uint32_t() {
-        return getUnix();
+    bool operator==(const Datime& dt) {
+        return getUnix() == dt.getUnix();
+    }
+    bool operator!=(const Datime& dt) {
+        return getUnix() != dt.getUnix();
+    }
+    bool operator>(const Datime& dt) {
+        return getUnix() > dt.getUnix();
+    }
+    bool operator>=(const Datime& dt) {
+        return getUnix() >= dt.getUnix();
+    }
+    bool operator<(const Datime& dt) {
+        return getUnix() < dt.getUnix();
+    }
+    bool operator<=(const Datime& dt) {
+        return getUnix() <= dt.getUnix();
+    }
+    
+    bool operator==(StampConvert& s) {
+        return getUnix() == s.getUnix();
+    }
+    bool operator!=(StampConvert& s) {
+        return getUnix() != s.getUnix();
+    }
+    bool operator>(StampConvert& s) {
+        return getUnix() > s.getUnix();
+    }
+    bool operator>=(StampConvert& s) {
+        return getUnix() >= s.getUnix();
+    }
+    bool operator<(StampConvert& s) {
+        return getUnix() < s.getUnix();
+    }
+    bool operator<=(StampConvert& s) {
+        return getUnix() <= s.getUnix();
     }
 
     bool operator==(uint32_t u) {
@@ -136,23 +170,33 @@ class StampCore {
         return getUnix() <= u;
     }
 
-    bool operator==(DaySeconds ds) {
+    bool operator==(const DaySeconds& ds) {
         return daySeconds() == ds.seconds;
     }
-    bool operator!=(DaySeconds ds) {
+    bool operator!=(const DaySeconds& ds) {
         return daySeconds() != ds.seconds;
     }
-    bool operator>(DaySeconds ds) {
+    bool operator>(const DaySeconds& ds) {
         return daySeconds() > ds.seconds;
     }
-    bool operator>=(DaySeconds ds) {
+    bool operator>=(const DaySeconds& ds) {
         return daySeconds() >= ds.seconds;
     }
-    bool operator<(DaySeconds ds) {
+    bool operator<(const DaySeconds& ds) {
         return daySeconds() < ds.seconds;
     }
-    bool operator<=(DaySeconds ds) {
+    bool operator<=(const DaySeconds& ds) {
         return daySeconds() <= ds.seconds;
+    }
+
+    // экспортировать в локальное время Datime
+    Datime get() {
+        return getUnix();
+    }
+
+    // экспортировать в переменную типа Datime
+    void get(Datime& dt) {
+        dt = getUnix();
     }
 
    private:

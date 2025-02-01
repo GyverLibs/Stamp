@@ -8,8 +8,7 @@
 
 Stamp	KEYWORD1
 Datime	KEYWORD1
-StampTicker	KEYWORD1
-StampSync	KEYWORD1
+StampKeeper	KEYWORD1
 StampUtils	KEYWORD1
 DaySeconds	KEYWORD1
 STAMP_ALG	KEYWORD1
@@ -74,8 +73,8 @@ tick	KEYWORD2
 ready	KEYWORD2
 calcUnix	KEYWORD2
 skipTicks	KEYWORD2
-attachSecond	KEYWORD2
-detachSecond	KEYWORD2
+onSecond	KEYWORD2
+onSync	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
