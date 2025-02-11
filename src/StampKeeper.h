@@ -47,7 +47,7 @@ class StampKeeper : public StampConvert {
     }
 
     // синхронизировать с Datime
-    void sync(Datime& dt, uint16_t ms = 0, bool skipTicks = false) {
+    void sync(const Datime& dt, uint16_t ms = 0, bool skipTicks = false) {
         sync(dt.getUnix(), ms, skipTicks);
     }
 
