@@ -399,7 +399,7 @@ uint32_t getUnix();
 uint16_t ms();
 
 // получить миллисекунды с epoch
-uint64_t unixMs();
+uint64_t getUnixMs();
 
 // тикер, вызывать в loop. Вернёт true на новой секунде
 bool tick();

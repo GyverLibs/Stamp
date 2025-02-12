@@ -102,7 +102,7 @@ class StampKeeper : public StampConvert {
     }
 
     // получить миллисекунды с epoch
-    uint64_t unixMs() {
+    uint64_t getUnixMs() {
         return synced() ? (getUnix() * 1000ull + ms()) : 0;
     }
 
