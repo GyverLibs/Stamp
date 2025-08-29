@@ -244,6 +244,10 @@ operator Datime();
 char* dateToChar(char* buf);
 String dateToString();
 
+// вывести дату в формате "yyyy-mm-dd"
+char* dateToCharISO(char* buf);
+String dateToStringISO();
+
 // вывести время в формате "hh:mm:ss"
 char* timeToChar(char* buf);
 String timeToString();
@@ -251,6 +255,10 @@ String timeToString();
 // вывести время и дату в формате "dd.mm.yyyy hh:mm:ss"
 char* toChar(char* buf, char div = ' ');
 String toString(char div = ' ');
+
+// вывести в формате "yyyy-mm-dd hh:mm:ss"
+char* toCharISO(char* buf, char div = ' ');
+String toStringISO(char div = ' ');
 
 // ============ EXPORT EPOCH ============
 

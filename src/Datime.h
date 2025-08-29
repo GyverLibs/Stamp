@@ -303,11 +303,27 @@ class Datime {
         itoa(min(year, (uint16_t)9999), buf + 6, DEC);
         return buf + 10;
     }
+    // вывести дату в формате "yyyy-mm-dd" [11]. Вернёт указатель на конец строки
+    char* dateToCharISO(char* buf) const {
+        itoa(min(year, (uint16_t)9999), buf, DEC);
+        buf[4] = '-';
+        _btoa(month, buf + 5);
+        buf[7] = '-';
+        _btoa(day, buf + 8);
+        buf[10] = 0;
+        return buf + 10;
+    }
 
     // вывести дату в формате "dd.mm.yyyy"
     String dateToString() const {
         char buf[11];
         dateToChar(buf);
+        return buf;
+    }
+    // вывести дату в формате "dd.mm.yyyy"
+    String dateToStringISO() const {
+        char buf[11];
+        dateToCharISO(buf);
         return buf;
     }
 
@@ -336,11 +352,24 @@ class Datime {
         timeToChar(buf + 11);
         return buf + 19;
     }
+    // вывести в формате "yyyy-mm-dd hh:mm:ss" [20]. Вернёт указатель на конец строки
+    char* toCharISO(char* buf, char div = ' ') const {
+        dateToCharISO(buf);
+        buf[10] = div;
+        timeToChar(buf + 11);
+        return buf + 19;
+    }
 
     // вывести в формате "dd.mm.yyyy hh:mm:ss"
     String toString(char div = ' ') const {
         char buf[20];
         toChar(buf, div);
+        return buf;
+    }
+    // вывести в формате "dd.mm.yyyy hh:mm:ss"
+    String toStringISO(char div = ' ') const {
+        char buf[20];
+        toCharISO(buf, div);
         return buf;
     }
 
@@ -371,10 +400,10 @@ class Datime {
         return 1;
     }
 
-    // hh:mm:ss или yyyy-mm-dd или yyyy-mm-ddThh:mm:ss
+    // hh:mm:ss или yyyy-mm-dd или yyyy-mm-dd hh:mm:ss
     bool parse(const char* s) {
         uint16_t len = strlen(s);
-        if (len == 19 && s[10] == 'T') {  // dateTtime
+        if (len == 19) {  // dateXtime
             if (!parseDate(s)) return 0;
             if (!parseTime(s + 11)) return 0;
         } else if (len == 10) {  // date
