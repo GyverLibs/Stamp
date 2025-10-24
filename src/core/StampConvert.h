@@ -108,7 +108,7 @@ class StampConvert {
     }
 
     // получить текущий день года
-    uint8_t yearDay() {
+    uint16_t yearDay() {
         return now().yearDay;
     }
 

@@ -301,7 +301,7 @@ uint16_t year();
 uint8_t weekDay();
 
 // получить текущий день года
-uint8_t yearDay();
+uint16_t yearDay();
 
 // сравнивается с Datime, uint32_t, DaySeconds
 ```
