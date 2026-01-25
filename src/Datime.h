@@ -40,10 +40,17 @@ class Datime {
     uint8_t second = 0;
 
     // день недели (1 пн.. 7 вс)
-    uint8_t weekDay = 1;
+    uint8_t weekDay() const {
+        return StampUtils::dateToWeekDay(day, month, year);
+    }
 
     // день года (1.. 365-366)
-    uint16_t yearDay = 1;
+    uint16_t yearDay() const {
+        return StampUtils::dateToYearDay(day, month, year);
+    }
+
+    // uint8_t weekDay = 1;
+    // uint16_t yearDay = 1;
 
     // ========= CONSTRUCTOR =========
     Datime() {}
@@ -75,21 +82,28 @@ class Datime {
         Datime::hour = hour;
         Datime::minute = minute;
         Datime::second = second;
-        updateDays();
+        // updateDays();
     }
 
     // установить время (год, месяц, день) или (час, минута, секунда)
     void set(uint16_t yh, uint16_t mm, uint16_t ds) {
-        if (yh >= 24) {
-            year = yh;
-            month = mm;
-            day = ds;
-        } else {
-            hour = yh;
-            minute = mm;
-            second = ds;
-        }
-        updateDays();
+        if (yh >= 24) setDate(yh, mm, ds);
+        else setTime(yh, mm, ds);
+    }
+
+    // установить дату (год, месяц, день)
+    void setDate(uint16_t y, uint16_t m, uint16_t d) {
+        year = y;
+        month = m;
+        day = d;
+        // updateDays();
+    }
+
+    // установить время (час, минута, секунда)
+    void setTime(uint8_t h, uint8_t m, uint8_t s) {
+        hour = h;
+        minute = m;
+        second = s;
     }
 
     // установить из unix времени и глобального часового пояса setStampZone
@@ -104,7 +118,7 @@ class Datime {
         unix /= 60ul;
         Datime::hour = unix % 24ul;
         unix /= 24ul;
-        Datime::weekDay = (unix + 3) % 7 + 1;
+        // Datime::weekDay = (unix + 3) % 7 + 1;
         uint32_t z = unix + 719468;
         uint8_t era = z / 146097ul;
         uint16_t doe = z - era * 146097ul;
@@ -116,7 +130,7 @@ class Datime {
         Datime::month = mp + (mp < 10 ? 3 : -9);
         y += (Datime::month <= 2);
         Datime::year = y;
-        Datime::yearDay = StampUtils::dateToYearDay(Datime::day, Datime::month, Datime::year);
+        // Datime::yearDay = StampUtils::dateToYearDay(Datime::day, Datime::month, Datime::year);
 
 #elif _UNIX_ALG == UNIX_ALG_1
         int32_t days, rem;
@@ -134,8 +148,8 @@ class Datime {
         Datime::minute = rem / 60ul;
         Datime::second = rem % 60ul;
 
-        if ((Datime::weekDay = ((3 + days) % 7)) < 0) Datime::weekDay += 7;
-        if (!Datime::weekDay) Datime::weekDay = 7;
+        // if ((Datime::weekDay = ((3 + days) % 7)) < 0) Datime::weekDay += 7;
+        // if (!Datime::weekDay) Datime::weekDay = 7;
 
         years400 = days / 146097L;
         days -= years400 * 146097L;
@@ -155,12 +169,18 @@ class Datime {
         Datime::year = 2000 + years400 * 400 + years100 * 100 + years4 * 4 + remainingyears;
         bool yearleap = remainingyears == 0 && (years4 != 0 || years100 == 0);
 
-        Datime::yearDay = days + 31 + 28 + yearleap;
-        if (Datime::yearDay >= 365u + yearleap) {
-            Datime::yearDay -= 365u + yearleap;
+        // Datime::yearDay = days + 31 + 28 + yearleap;
+        // if (Datime::yearDay >= 365u + yearleap) {
+        //     Datime::yearDay -= 365u + yearleap;
+        //     Datime::year++;
+        // }
+        // Datime::yearDay++;
+
+        uint16_t yearDay = days + 31 + 28 + yearleap;
+        if (yearDay >= 365u + yearleap) {
+            yearDay -= 365u + yearleap;
             Datime::year++;
         }
-        Datime::yearDay++;
 
         Datime::month = 2;
         while (1) {
@@ -178,9 +198,9 @@ class Datime {
         uint16_t days, n, leapyear, years;
         ldiv_t lresult;
         div_t result;
-        if (unix < 946684800) unix = 946684800;
+        if (unix < _STAMP_2000_1_1) unix = _STAMP_2000_1_1;
 
-        unix -= 946684800;              // to 2000-01-01 UTC
+        unix -= _STAMP_2000_1_1;        // to 2000-01-01 UTC
         days = unix / 86400UL;          // 38753+
         fract = unix - days * 86400UL;  // 86400
 
@@ -192,8 +212,8 @@ class Datime {
 
         n = days + 6;
         n %= 7;
-        Datime::weekDay = n;
-        if (!Datime::weekDay) Datime::weekDay = 7;
+        // Datime::weekDay = n;
+        // if (!Datime::weekDay) Datime::weekDay = 7;
 
         lresult = ldiv((long)days, 36525L);  // 38753+
         years = 100 * lresult.quot;
@@ -214,7 +234,7 @@ class Datime {
             days = result.rem;  // <- 365
         }
         Datime::year = 100 + years + 1900;
-        Datime::yearDay = days + 1;
+        // Datime::yearDay = days + 1;
 
         n = 59 + leapyear;
         if (days < n) {
@@ -236,7 +256,7 @@ class Datime {
         Datime::month++;
 
 #elif _UNIX_ALG == UNIX_ALG_3
-        unix -= 946684800;
+        unix -= _STAMP_2000_1_1;
         Datime::second = unix % 60ul;
         unix /= 60ul;
         Datime::minute = unix % 60ul;
@@ -244,7 +264,7 @@ class Datime {
         Datime::hour = unix % 24ul;
 
         uint16_t days = unix / 24ul;
-        Datime::weekDay = (days + 5) % 7 + 1;
+        // Datime::weekDay = (days + 5) % 7 + 1;
 
         bool leap = 0;
         for (Datime::year = 0;; Datime::year++) {
@@ -253,7 +273,7 @@ class Datime {
             days -= 365u + leap;
         }
         Datime::year += 2000;
-        Datime::yearDay = days + 1;
+        // Datime::yearDay = days + 1;
 
         for (Datime::month = 1; Datime::month < 12; Datime::month++) {
             uint8_t dm = StampUtils::daysInMonth(Datime::month);
@@ -264,7 +284,7 @@ class Datime {
         Datime::day = days + 1;
 
 #elif _UNIX_ALG == UNIX_ALG_TIME_T
-        time_t t = unix - 946684800;
+        time_t t = unix - _STAMP_2000_1_1;
         tm tt;
         gmtime_r(&t, &tt);
         Datime::year = tt.tm_year + 1900;
@@ -273,9 +293,9 @@ class Datime {
         Datime::hour = tt.tm_hour;
         Datime::minute = tt.tm_min;
         Datime::second = tt.tm_sec;
-        Datime::weekDay = tt.tm_wday;
-        if (!Datime::weekDay) Datime::weekDay = 7;
-        Datime::yearDay = tt.tm_yday + 1;
+        // Datime::weekDay = tt.tm_wday;
+        // if (!Datime::weekDay) Datime::weekDay = 7;
+        // Datime::yearDay = tt.tm_yday + 1;
 #endif
     }
 
@@ -443,66 +463,41 @@ class Datime {
     }
 
     // =========== COMPARE ===========
-    bool operator==(const Datime& dt) {
-        return getUnix() == dt.getUnix();
-    }
-    bool operator!=(const Datime& dt) {
-        return getUnix() != dt.getUnix();
-    }
-    bool operator>(const Datime& dt) {
-        return getUnix() > dt.getUnix();
-    }
-    bool operator>=(const Datime& dt) {
-        return getUnix() >= dt.getUnix();
-    }
-    bool operator<(const Datime& dt) {
-        return getUnix() < dt.getUnix();
-    }
-    bool operator<=(const Datime& dt) {
-        return getUnix() <= dt.getUnix();
+    // сравнить, вернёт 0 если равны
+    int8_t compare(const Datime& dt) const {
+        if (year != dt.year) return (year < dt.year) ? -1 : 1;
+        if (month != dt.month) return (month < dt.month) ? -1 : 1;
+        if (day != dt.day) return (day < dt.day) ? -1 : 1;
+        if (hour != dt.hour) return (hour < dt.hour) ? -1 : 1;
+        if (minute != dt.minute) return (minute < dt.minute) ? -1 : 1;
+        if (second != dt.second) return (second < dt.second) ? -1 : 1;
+        return 0;
     }
 
-    bool operator==(uint32_t u) {
-        return getUnix() == u;
-    }
-    bool operator!=(uint32_t u) {
-        return getUnix() != u;
-    }
-    bool operator>(uint32_t u) {
-        return getUnix() > u;
-    }
-    bool operator>=(uint32_t u) {
-        return getUnix() >= u;
-    }
-    bool operator<(uint32_t u) {
-        return getUnix() < u;
-    }
-    bool operator<=(uint32_t u) {
-        return getUnix() <= u;
-    }
+    bool operator==(const Datime& dt) const { return compare(dt) == 0; }
+    bool operator!=(const Datime& dt) const { return compare(dt) != 0; }
+    bool operator<(const Datime& dt) const { return compare(dt) < 0; }
+    bool operator<=(const Datime& dt) const { return compare(dt) <= 0; }
+    bool operator>(const Datime& dt) const { return compare(dt) > 0; }
+    bool operator>=(const Datime& dt) const { return compare(dt) >= 0; }
 
-    bool operator==(const DaySeconds& ds) const {
-        return daySeconds() == ds.seconds;
-    }
-    bool operator!=(const DaySeconds& ds) const {
-        return daySeconds() != ds.seconds;
-    }
-    bool operator>(const DaySeconds& ds) const {
-        return daySeconds() > ds.seconds;
-    }
-    bool operator>=(const DaySeconds& ds) const {
-        return daySeconds() >= ds.seconds;
-    }
-    bool operator<(const DaySeconds& ds) const {
-        return daySeconds() < ds.seconds;
-    }
-    bool operator<=(const DaySeconds& ds) const {
-        return daySeconds() <= ds.seconds;
-    }
+    bool operator==(const DaySeconds& ds) const { return daySeconds() == ds.seconds; }
+    bool operator!=(const DaySeconds& ds) const { return daySeconds() != ds.seconds; }
+    bool operator>(const DaySeconds& ds) const { return daySeconds() > ds.seconds; }
+    bool operator>=(const DaySeconds& ds) const { return daySeconds() >= ds.seconds; }
+    bool operator<(const DaySeconds& ds) const { return daySeconds() < ds.seconds; }
+    bool operator<=(const DaySeconds& ds) const { return daySeconds() <= ds.seconds; }
+
+    bool operator==(uint32_t u) const { return getUnix() == u; }
+    bool operator!=(uint32_t u) const { return getUnix() != u; }
+    bool operator>(uint32_t u) const { return getUnix() > u; }
+    bool operator>=(uint32_t u) const { return getUnix() >= u; }
+    bool operator<(uint32_t u) const { return getUnix() < u; }
+    bool operator<=(uint32_t u) const { return getUnix() <= u; }
 
     // одинаковое время
     bool equals(const Datime& dt) const {
-        return !memcmp(&dt, this, sizeof(Datime));
+        return compare(dt) == 0;
     }
 
     // високосный ли год
@@ -522,7 +517,9 @@ class Datime {
 
     // день года как индекс массива от 0 до 365 независимо от високосного года. 29 февраля имеет индекс 59
     uint16_t dayIndex() const {
-        return ((yearDay >= 60) ? (isLeap() ? yearDay : yearDay + 1) : yearDay) - 1;
+        uint16_t yday = yearDay();
+        // return ((yearDay >= 60) ? (isLeap() ? yearDay : yearDay + 1) : yearDay) - 1;
+        return ((yday >= 60) ? (isLeap() ? yday : yday + 1) : yday) - 1;
     }
 
     // ============= ADD =============
@@ -574,12 +571,32 @@ class Datime {
     // добавить дни
     void addDays(uint32_t d) {
         while (d) {
-            d--;
-            day++;
-            weekDay++;
-            yearDay++;
+            --d;
+            ++day;
+            // weekDay++;
+            // yearDay++;
             _update();
         }
+        /*
+        // fast
+        while (d) {
+            uint8_t dim = StampUtils::daysInMonth(month, year);
+            uint32_t leftInMonth = dim - day;
+
+            if (d <= leftInMonth) {
+                day += d;
+                break;
+            }
+
+            d -= (leftInMonth + 1);
+            day = 1;
+            month++;
+            if (month > 12) {
+                month = 1;
+                year++;
+            }
+        }
+        */
     }
 
     // ============= NEXT =============
@@ -615,13 +632,13 @@ class Datime {
             year++;
             month = 1;
         }
-        updateDays();
+        // updateDays();
     }
 
     // обновить weekDay и yearDay исходя из текущей даты (после ручного изменения)
     void updateDays() {
-        weekDay = StampUtils::dateToWeekDay(day, month, year);
-        yearDay = StampUtils::dateToYearDay(day, month, year);
+        // weekDay = StampUtils::dateToWeekDay(day, month, year);
+        // yearDay = StampUtils::dateToYearDay(day, month, year);
     }
 
    private:
@@ -636,11 +653,11 @@ class Datime {
         }
         if (hour > 23) {
             hour = 0;
-            weekDay++;
-            yearDay++;
+            // weekDay++;
+            // yearDay++;
             day++;
         }
-        if (weekDay > 7) weekDay = 1;
+        // if (weekDay > 7) weekDay = 1;
         if (day > StampUtils::daysInMonth(month, year)) {
             month++;
             day = 1;
@@ -648,7 +665,7 @@ class Datime {
         if (month > 12) {
             year++;
             month = 1;
-            yearDay = 1;
+            // yearDay = 1;
         }
     }
 

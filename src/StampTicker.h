@@ -48,17 +48,17 @@ class StampTicker : public StampConvert {
     }
 
     // время синхронизировано
-    inline bool synced() {
+    inline bool synced() const {
         return _unix;
     }
 
     // время синхронизировано
-    explicit operator bool() {
+    explicit operator bool() const {
         return synced();
     }
 
     // секундный флаг
-    inline bool newSecond() {
+    inline bool newSecond() const {
         return _ready;
     }
 
@@ -97,28 +97,28 @@ class StampTicker : public StampConvert {
     }
 
     // получить текущий unix
-    uint32_t getUnix() {
+    uint32_t getUnix() const {
         return _unix;
     }
 
     // получить миллисекунды текущей секунды
-    uint16_t ms() {
+    uint16_t ms() const {
         return synced() ? ((millis() - _tmr) % 1000ul) : 0;
     }
 
     // получить миллисекунды с epoch
-    uint64_t unixMs() {
+    uint64_t unixMs() const {
         return synced() ? (getUnix() * 1000ull + ms()) : 0;
     }
 
-    inline bool ready() __attribute__((deprecated)) {
+    inline bool ready() const __attribute__((deprecated)) {
         return _ready;
     }
 
    private:
+    SecondHandler _cb = nullptr;
     uint32_t _unix = 0;
     uint32_t _tmr = 0;
     int16_t _diff = 0;
     bool _ready = 0;
-    SecondHandler _cb = nullptr;
 };

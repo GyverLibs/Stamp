@@ -15,8 +15,8 @@ void setup() {
     Serial.begin(115200);
     // unix to date test
     for (uint32_t i = 0; i < 365 * 100ul; i++) {
-        uint32_t unix = 946684800 + 86400ul * i + random(86400);
-        time_t t = unix - 946684800;
+        uint32_t unix = _STAMP_2000_1_1 + 86400ul * i + random(86400);
+        time_t t = unix - _STAMP_2000_1_1;
         tm tt;
         gmtime_r(&t, &tt);
 
@@ -37,8 +37,8 @@ void setup() {
 
     // date to unix test
     for (uint32_t i = 0; i < 365 * 100ul; i++) {
-        uint32_t unix = 946684800 + 86400ul * i + random(86400);
-        time_t t = unix - 946684800;
+        uint32_t unix = _STAMP_2000_1_1 + 86400ul * i + random(86400);
+        time_t t = unix - _STAMP_2000_1_1;
         tm tt;
         gmtime_r(&t, &tt);
 

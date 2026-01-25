@@ -9,11 +9,11 @@ uint32_t timeToSeconds(uint8_t hours, uint8_t minutes, uint8_t seconds) {
 }
 
 bool isLeap(uint16_t year) {
-    return !(year & 3) && (!(year % 400) || (year % 100));
+    return (((year & 3) == 0 && year % 100 != 0) || (year % 400 == 0));
 }
 
 uint8_t daysInMonth(uint8_t month) {
-    return pgm_read_byte(&dim_table[month - 1]);
+    return (month >= 1 && month <= 12) ? pgm_read_byte(&dim_table[month - 1]) : 0;
 }
 
 uint8_t daysInMonth(uint8_t month, uint16_t year) {
@@ -41,7 +41,7 @@ uint8_t dateToWeekDay(uint8_t day, uint8_t month, uint16_t year) {
 }
 
 uint32_t dateToUnix(uint8_t day, uint8_t month, uint16_t year, uint8_t hour, uint8_t minute, uint8_t second, int16_t zone) {
-    return 946684800ul + (dateToDays2000(day, month, year)) * 86400ul + timeToSeconds(hour, minute, second) - zone * 60;
+    return _STAMP_2000_1_1 + (dateToDays2000(day, month, year)) * 86400ul + timeToSeconds(hour, minute, second) - zone * 60;
 }
 
 }  // namespace StampUtils

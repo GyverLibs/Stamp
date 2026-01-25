@@ -1,6 +1,8 @@
 #pragma once
 #include <Arduino.h>
 
+#define _STAMP_2000_1_1 946684800ul
+
 namespace StampUtils {
 
 // время в секунды

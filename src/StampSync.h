@@ -22,17 +22,17 @@ class StampSync : public StampConvert {
     }
 
     // время синхронизировано
-    inline bool synced() {
+    inline bool synced() const {
         return _unix;
     }
 
     // время синхронизировано
-    explicit operator bool() {
+    explicit operator bool() const {
         return synced();
     }
 
     // получить текущий unix
-    uint32_t getUnix() {
+    uint32_t getUnix() const {
         if (!synced()) return 0;
         uint32_t diff = millis() - _syncTime;
         if (diff > STAMP_SYNC_LOOP_PRD) {
@@ -44,16 +44,16 @@ class StampSync : public StampConvert {
     }
 
     // получить миллисекунды текущей секунды
-    uint16_t ms() {
+    uint16_t ms() const {
         return synced() ? ((millis() - _syncTime) % 1000ul) : 0;
     }
 
     // получить миллисекунды с epoch
-    uint64_t unixMs() {
+    uint64_t unixMs() const {
         return synced() ? (getUnix() * 1000ull + ms()) : 0;
     }
 
    private:
-    uint32_t _unix = 0;
-    uint32_t _syncTime = 0;
+    mutable uint32_t _unix = 0;
+    mutable uint32_t _syncTime = 0;
 };

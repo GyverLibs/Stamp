@@ -67,17 +67,17 @@ class StampKeeper : public StampConvert {
     }
 
     // есть рассинхронизация, которую нужно "дотикать"
-    bool hasDesync() {
+    bool hasDesync() const {
         return _tickFlag && (millis() - _syncTmr >= 1000 || _diff > 0);
     }
 
     // время синхронизировано
-    inline bool synced() {
+    inline bool synced() const {
         return _unix;
     }
 
     // секундный флаг
-    inline bool newSecond() {
+    inline bool newSecond() const {
         return _ready;
     }
 
@@ -92,17 +92,17 @@ class StampKeeper : public StampConvert {
     }
 
     // получить текущий unix
-    uint32_t getUnix() override {
+    uint32_t getUnix() const override {
         return synced() ? (_tickFlag ? _unix : (_unix + _diff + (millis() - _syncTmr) / 1000ul)) : 0;
     }
 
     // получить миллисекунды текущей секунды
-    uint16_t ms() {
+    uint16_t ms() const {
         return synced() ? ((millis() - _syncTmr) % 1000ul) : 0;
     }
 
     // получить миллисекунды с epoch
-    uint64_t getUnixMs() {
+    uint64_t getUnixMs() const {
         return synced() ? (getUnix() * 1000ull + ms()) : 0;
     }
 
@@ -139,11 +139,11 @@ class StampKeeper : public StampConvert {
     }
 
    private:
+    SecondCallback _sec_cb = nullptr;
+    SyncCallback _sync_cb = nullptr;
     uint32_t _unix = 0;
     uint32_t _syncTmr = 0;
     int16_t _diff = 0;
-    SecondCallback _sec_cb = nullptr;
-    SyncCallback _sync_cb = nullptr;
     bool _tickFlag = false;
     bool _ready = false;
 };

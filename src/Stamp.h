@@ -10,11 +10,9 @@ class Stamp : public StampConvert {
     // ========== CONSTRUCT ==========
     Stamp() {}
     Stamp(const Stamp& s) = default;
+    Stamp(uint32_t unix) : unix(unix) {}
     Stamp(const char* str) {
         parse(str);
-    }
-    Stamp(uint32_t unix) {
-        Stamp::unix = unix;
     }
     Stamp(const Datime& dt) {
         set(dt);
@@ -82,7 +80,7 @@ class Stamp : public StampConvert {
 
     // =========== OVERLOAD ===========
     // получить время в секундах
-    uint32_t getUnix() override {
+    uint32_t getUnix() const override {
         return unix;
     }
 };
