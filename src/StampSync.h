@@ -36,8 +36,9 @@ class StampSync : public StampConvert {
         if (!synced()) return 0;
         uint32_t diff = millis() - _syncTime;
         if (diff > STAMP_SYNC_LOOP_PRD) {
-            _unix += diff / 1000ul;
-            _syncTime += diff - diff % 1000ul;
+            uint32_t sec = diff / 1000ul;
+            _syncTime += sec * 1000ul;
+            _unix += sec;
             return _unix;
         }
         return _unix + diff / 1000ul;
