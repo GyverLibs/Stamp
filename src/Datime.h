@@ -12,8 +12,9 @@
 #define UNIX_ALG_TIME_T 4  // ~246us / ~842B Flash (AVR)
 
 #ifndef UNIX_ALG
-#define _UNIX_ALG UNIX_ALG_3
+#define UNIX_ALG UNIX_ALG_3
 #endif
+#define _UNIX_ALG UNIX_ALG
 
 #if _UNIX_ALG == UNIX_ALG_TIME_T
 #include <time.h>
@@ -396,69 +397,98 @@ class Datime {
     // ========== PARSE ==========
     // yyyy-mm-dd
     bool parseDate(const char* s) {
+        if (!s) return 0;
         if (strlen(s) < 10) return 0;
-        year = atoi(s);
-        s = strchr(s, '-');
-        if (!s) return 0;
-        month = atoi(++s);
-        s = strchr(s, '-');
-        if (!s) return 0;
-        day = atoi(++s);
+
+        uint16_t y = atoi(s);
+        const char* p = strchr(s, '-');
+        if (!p) return 0;
+        uint8_t m = atoi(++p);
+        p = strchr(p, '-');
+        if (!p) return 0;
+        uint8_t d = atoi(++p);
+
+        if (!_valid(y, m, d, hour, minute, second)) return 0;
+        year = y;
+        month = m;
+        day = d;
         return 1;
     }
 
     // hh:mm:ss
     bool parseTime(const char* s) {
+        if (!s) return 0;
         if (strlen(s) < 8) return 0;
-        hour = atoi(s);
-        s = strchr(s, ':');
-        if (!s) return 0;
-        minute = atoi(++s);
-        s = strchr(s, ':');
-        if (!s) return 0;
-        second = atoi(++s);
+
+        uint8_t h = atoi(s);
+        const char* p = strchr(s, ':');
+        if (!p) return 0;
+        uint8_t m = atoi(++p);
+        p = strchr(p, ':');
+        if (!p) return 0;
+        uint8_t sec = atoi(++p);
+
+        if (!_valid(year, month, day, h, m, sec)) return 0;
+        hour = h;
+        minute = m;
+        second = sec;
         return 1;
     }
 
     // hh:mm:ss или yyyy-mm-dd или yyyy-mm-dd hh:mm:ss
     bool parse(const char* s) {
+        if (!s) return 0;
         uint16_t len = strlen(s);
+        Datime dt = *this;
         if (len == 19) {  // dateXtime
-            if (!parseDate(s)) return 0;
-            if (!parseTime(s + 11)) return 0;
+            if (!dt.parseDate(s)) return 0;
+            if (!dt.parseTime(s + 11)) return 0;
         } else if (len == 10) {  // date
-            if (!parseDate(s)) return 0;
+            if (!dt.parseDate(s)) return 0;
         } else if (len == 8) {  // time
-            if (!parseTime(s)) return 0;
+            if (!dt.parseTime(s)) return 0;
         } else {
             return 0;
         }
+        *this = dt;
         return 1;
     }
 
     // <day_week>, dd <month> yyyy hh:mm:ss
     bool parseHTTP(const char* s) {
+        if (!s) return 0;
         char* comma = strchr(s, ',');
         if (!comma) return 0;
 
         s = comma + 2;
-        day = atoi(s);
-        month = 0;
+        if (strlen(s) < 20) return 0;
+
+        uint8_t d = atoi(s);
+        uint8_t mo = 0;
         switch (s[3]) {
-            case 'J': month = (s[4] == 'a') ? 1 : ((s[5] == 'n') ? 6 : 7); break;
-            case 'F': month = 2; break;
-            case 'A': month = (s[5] == 'r') ? 4 : 8; break;
-            case 'M': month = (s[5] == 'r') ? 3 : 5; break;
-            case 'S': month = 9; break;
-            case 'O': month = 10; break;
-            case 'N': month = 11; break;
-            case 'D': month = 12; break;
+            case 'J': mo = (s[4] == 'a') ? 1 : ((s[5] == 'n') ? 6 : 7); break;
+            case 'F': mo = 2; break;
+            case 'A': mo = (s[5] == 'r') ? 4 : 8; break;
+            case 'M': mo = (s[5] == 'r') ? 3 : 5; break;
+            case 'S': mo = 9; break;
+            case 'O': mo = 10; break;
+            case 'N': mo = 11; break;
+            case 'D': mo = 12; break;
             default: return 0;
         }
-        year = atoi(s + 7);
-        hour = atoi(s + 12);
-        minute = atoi(s + 15);
-        second = atoi(s + 18);
+
+        uint16_t y = atoi(s + 7);
+        uint8_t h = atoi(s + 12);
+        uint8_t m = atoi(s + 15);
+        uint8_t sec = atoi(s + 18);
+        if (!_valid(y, mo, d, h, m, sec)) return 0;
+
+        year = y;
+        month = mo;
+        day = d;
+        hour = h;
+        minute = m;
+        second = sec;
         return 1;
     }
 
@@ -507,7 +537,7 @@ class Datime {
 
     // дата и время корректны
     bool valid() const {
-        return (year >= 2000) && (month >= 1 && month <= 12) && (day >= 1 && day <= 31) && (hour <= 23) && (minute <= 59) && (second <= 59);
+        return _valid(year, month, day, hour, minute, second);
     }
 
     // дата 01.01.2000
@@ -642,6 +672,10 @@ class Datime {
     }
 
    private:
+    static bool _valid(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second) {
+        return (year >= 2000) && (month >= 1 && month <= 12) && (day >= 1 && day <= StampUtils::daysInMonth(month, year)) && (hour <= 23) && (minute <= 59) && (second <= 59);
+    }
+
     void _update() {
         if (second > 59) {
             second = 0;

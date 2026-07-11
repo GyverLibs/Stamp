@@ -44,7 +44,7 @@ class StampConvert {
         return now().toChar(buf, div);
     }
     String toString(char div = ' ') const {
-        return now().toString();
+        return now().toString(div);
     }
 
     // ============ EXPORT EPOCH ============

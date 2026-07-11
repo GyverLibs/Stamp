@@ -33,7 +33,7 @@ uint16_t dateToYearDay(uint8_t day, uint8_t month, uint16_t year) {
 uint16_t dateToDays2000(uint8_t day, uint8_t month, uint16_t year) {
     uint16_t yday = dateToYearDay(day, month, year);
     if (year >= 2000) year -= 2000;
-    return yday + 365 * year + (year + 3) / 4 - 1;
+    return yday + 365 * year + (year + 3) / 4 - (year + 99) / 100 + (year + 399) / 400 - 1;
 }
 
 uint8_t dateToWeekDay(uint8_t day, uint8_t month, uint16_t year) {

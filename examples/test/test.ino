@@ -23,7 +23,7 @@ void setup() {
         Stamp dt(unix);
         Datime dt_s = dt.get();
 
-        if (dt_s.year != (tt.tm_year + 1900) ||
+        if (dt_s.year != (uint16_t)(tt.tm_year + 1900) ||
             dt_s.month != (tt.tm_mon + 1) ||
             dt_s.day != (tt.tm_mday) ||
             dt_s.hour != (tt.tm_hour) ||

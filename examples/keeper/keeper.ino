@@ -33,9 +33,9 @@ void loop() {
 
         // вывод в Datime
         Datime dt = rtc;  // или Datime dt(rtc)
-        dt.year;
-        dt.second;
-        dt.hour;
+        Serial.println(dt.year);
+        Serial.println(dt.second);
+        Serial.println(dt.hour);
         dt.weekDay();
         dt.yearDay();
         // ... и прочие методы и переменные Datime
@@ -48,7 +48,7 @@ void loop() {
 
         // сравнение
         rtc == DaySeconds(12, 35, 0);            // сравнение с DaySeconds (время равно 12:35:00)
-        rtc == 1738237474;                       // сравнение с unix
+        rtc == 1738237474ul;                     // сравнение с unix
         rtc == Datime(2025, 1, 30, 14, 14, 30);  // сравнение с Datime
     }
 

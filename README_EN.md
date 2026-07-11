@@ -132,7 +132,7 @@ void set(uint32_t unix);
 uint32_t daySeconds();
 
 // single-second
-uint32_t getUnix();
+uint32_t getUnix() const;
 
 // ========== TO STRING ==========
 // Date the date in the format "dd.mm.yyy" [11]. Returns the pointer to the end of the line
@@ -230,7 +230,7 @@ void nextMonth();
 Converter for other classes
 
 ```cpp
-virtual uint32_t getUnix();
+virtual uint32_t getUnix() const;
 
 // =========== GET TIME ===========
 // export at local time Datime
@@ -352,7 +352,7 @@ bool parseHTTP(const char* s);
 
 // =========== OVERLOAD ===========
 // time in seconds
-uint32_t getUnix();
+uint32_t getUnix() const;
 ```
 
 ### StampKeeper
@@ -376,7 +376,7 @@ void sync(uint32_t unix, uint16_t ms = 0, bool skipTicks = false);
 void sync(StampKeeper& keeper, bool skipTicks = false);
 
 // synchronize
-void sync(Datime& dt, uint16_t ms = 0, bool skipTicks = false);
+void sync(const Datime& dt, uint16_t ms = 0, bool skipTicks = false);
 
 // cancel out
 void reset();
@@ -400,7 +400,7 @@ void onSecond(SecondCallback handler);
 void onSync(SyncCallback cb);
 
 // get current unix
-uint32_t getUnix();
+uint32_t getUnix() const;
 
 // get milliseconds of the current second
 uint16_t ms();
@@ -459,9 +459,9 @@ void loop() {
 
         // deduction
         Datime dt = rtc;  // or Datime dt(rtc)
-        dt.year;
-        dt.second;
-        dt.hour;
+        Serial.println(dt.year);
+        Serial.println(dt.second);
+        Serial.println(dt.hour);
         dt.weekDay();
         dt.yearDay();
         // ... and other Datime methods and variables
@@ -474,7 +474,7 @@ void loop() {
 
         // comparison
         rtc == DaySeconds(12, 35, 0);            // Compared to DaySeconds (time is 12:35:00)
-        rtc == 1738237474;                       // comparison
+        rtc == 1738237474ul;                     // comparison with unix
         rtc == Datime(2025, 1, 30, 14, 14, 30);  // comparison
     }
 

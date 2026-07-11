@@ -130,7 +130,7 @@ void set(uint32_t unix);
 uint32_t daySeconds();
 
 // вывести в unix-секунды
-uint32_t getUnix();
+uint32_t getUnix() const;
 
 // ========== TO STRING ==========
 // вывести дату в формате "dd.mm.yyyy" [11]. Вернёт указатель на конец строки
@@ -228,7 +228,7 @@ void nextMonth();
 Конвертер для других классов
 
 ```cpp
-virtual uint32_t getUnix();
+virtual uint32_t getUnix() const;
 
 // =========== GET TIME ===========
 // экспортировать в локальное время Datime
@@ -350,7 +350,7 @@ bool parseHTTP(const char* s);
 
 // =========== OVERLOAD ===========
 // получить время в секундах
-uint32_t getUnix();
+uint32_t getUnix() const;
 ```
 
 ### StampKeeper
@@ -374,7 +374,7 @@ void sync(uint32_t unix, uint16_t ms = 0, bool skipTicks = false);
 void sync(StampKeeper& keeper, bool skipTicks = false);
 
 // синхронизировать с Datime
-void sync(Datime& dt, uint16_t ms = 0, bool skipTicks = false);
+void sync(const Datime& dt, uint16_t ms = 0, bool skipTicks = false);
 
 // сбросить синхронизацию
 void reset();
@@ -398,7 +398,7 @@ void onSecond(SecondCallback handler);
 void onSync(SyncCallback cb);
 
 // получить текущий unix
-uint32_t getUnix();
+uint32_t getUnix() const;
 
 // получить миллисекунды текущей секунды
 uint16_t ms();
@@ -457,9 +457,9 @@ void loop() {
 
         // вывод в Datime
         Datime dt = rtc;  // или Datime dt(rtc)
-        dt.year;
-        dt.second;
-        dt.hour;
+        Serial.println(dt.year);
+        Serial.println(dt.second);
+        Serial.println(dt.hour);
         dt.weekDay();
         dt.yearDay();
         // ... и прочие методы и переменные Datime
@@ -472,7 +472,7 @@ void loop() {
 
         // сравнение
         rtc == DaySeconds(12, 35, 0);            // сравнение с DaySeconds (время равно 12:35:00)
-        rtc == 1738237474;                       // сравнение с unix
+        rtc == 1738237474ul;                     // сравнение с unix
         rtc == Datime(2025, 1, 30, 14, 14, 30);  // сравнение с Datime
     }
 
